@@ -9,11 +9,11 @@ st.write("If you can see this, Streamlit is running correctly!")
 # 2. Test MySQL database connection
 try:
     connection = mysql.connector.connect(
-        host=st.secrets["mysql"]["host"],
-        port=st.secrets["mysql"]["port"],
-        user=st.secrets["mysql"]["user"],
-        password=st.secrets["mysql"]["password"],
-        database=st.secrets["mysql"]["database"]
+        host=st.secrets["mysql"]["altaria.proxy.rlwy.net"],
+        port=st.secrets["mysql"]["55284"],
+        user=st.secrets["mysql"]["root"],
+        password=st.secrets["mysql"]["ddxOXmHeEmffQEdePamKSfHvrphOXbyf"],
+        database=st.secrets["mysql"]["series_history"]
     )
     
     if connection.is_connected():
