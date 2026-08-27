@@ -48,5 +48,5 @@ with gr.Blocks(title="Gradio Connection Test") as demo:
         outputs=[status_output, table_output]
     )
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     demo.launch()
