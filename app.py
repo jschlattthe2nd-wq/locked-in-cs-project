@@ -45,5 +45,5 @@ with gr.Blocks(title="NBA Finals Analytics System") as demo:
                 res_b = gr.Textbox(label="Result B")
             sim_btn.click(predict_matchup, inputs=[t_a, off_a, def_a, t_b, off_b, def_b, sims_input], outputs=[res_a, res_b])
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     demo.launch(server_name="127.0.0.1", server_port=7860, inbrowser=True)
