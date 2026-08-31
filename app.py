@@ -111,8 +111,9 @@ simulatortab = gr.Interface(
 
 mainapp = gr.TabbedInterface(
     [historytab, simulatortab], 
-    ["Series History", "Matchup Simulator"]
+    ["Series History", "Matchup Simulator"],
+    title="HoopsData"
 )
 
 if __name__ == "__main__":
-    mainapp.launch(app_title="HoopsData", inbrowser=True)
+    mainapp.launch(inbrowser=True)
