@@ -5,7 +5,7 @@ import random
 
 def getdbconnection():
     return mysql.connector.connect(
-        host="mysql.railway.internal",
+        host="altaria.proxy.rlwy.net",
         user="root",
         password="ddxOXmHeEmffQEdePamKSfHvrphOXbyf",
         database="nba_finals_db"
