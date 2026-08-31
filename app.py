@@ -90,7 +90,7 @@ historytab = gr.Interface(
     ],
     outputs=gr.Dataframe(label="Finals Records"),
     title="HoopsData - NBA Finals Historical Records",
-    allow_flagging="never"
+    flagging_mode="never"
 )
 
 simulatortab = gr.Interface(
@@ -106,7 +106,7 @@ simulatortab = gr.Interface(
         gr.Textbox(label="Team B Win Chance")
     ],
     title="HoopsData - Monte Carlo Matchup Simulator",
-    allow_flagging="never"
+    flagging_mode="never"
 )
 
 mainapp = gr.TabbedInterface(
