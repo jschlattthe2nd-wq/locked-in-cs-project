@@ -7,7 +7,7 @@ def getdbconnection():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="YOUR_PASSWORD",
+        password="ddxOXmHeEmffQEdePamKSfHvrphOXbyf",
         database="nba_finals_db"
     )
 
