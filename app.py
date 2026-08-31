@@ -5,7 +5,7 @@ import random
 
 def getdbconnection():
     return mysql.connector.connect(
-        host="localhost",
+        host="mysql.railway.internal",
         user="root",
         password="ddxOXmHeEmffQEdePamKSfHvrphOXbyf",
         database="nba_finals_db"
