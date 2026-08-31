@@ -89,7 +89,8 @@ historytab = gr.Interface(
         gr.Number(label="End Year", value=2026)
     ],
     outputs=gr.Dataframe(label="Finals Records"),
-    title="NBA Finals Historical Records"
+    title="HoopsData - NBA Finals Historical Records",
+    allow_flagging="never"
 )
 
 simulatortab = gr.Interface(
@@ -104,7 +105,8 @@ simulatortab = gr.Interface(
         gr.Textbox(label="Team A Win Chance"),
         gr.Textbox(label="Team B Win Chance")
     ],
-    title="Monte Carlo Matchup Simulator"
+    title="HoopsData - Monte Carlo Matchup Simulator",
+    allow_flagging="never"
 )
 
 mainapp = gr.TabbedInterface(
@@ -113,4 +115,4 @@ mainapp = gr.TabbedInterface(
 )
 
 if __name__ == "__main__":
-    mainapp.launch(inbrowser=True)
+    mainapp.launch(app_title="HoopsData", inbrowser=True)
