@@ -211,7 +211,7 @@ def runmontecarlosimulation(teama, teamb, simulations):
     winsb = 0
     sims = int(simulations)
     
-    for _ in range(sims):
+    for i in range(sims):
         seriesa = 0
         seriesb = 0
         while seriesa < 4 and seriesb < 4:
