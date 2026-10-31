@@ -1,489 +1,1746 @@
-import gradio as gr
-import pandas as pd
 import mysql.connector
 import random
-import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime
 
-DB_HOST = "localhost"
-DB_PORT = 3306
-DB_USER = "root"
-DB_PASSWORD = "Ajoshjohn2021"
-DB_NAME = "nba_finals_db"
+dbhost = "localhost"
+dbport = 3306
+dbuser = "root"
+dbpassword = "Ajoshjohn2021"
+dbname = "nbafinalsdb"
 
-
-def initdatabase():
-    try:
-        conn = mysql.connector.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            user=DB_USER,
-            password=DB_PASSWORD
-        )
-        cursor = conn.cursor()
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}")
-        cursor.close()
-        conn.close()
-
-        conn = mysql.connector.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            database=DB_NAME
-        )
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS team_stats (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                team_name VARCHAR(100) NOT NULL UNIQUE,
-                off_rating DECIMAL(5,2) NOT NULL,
-                def_rating DECIMAL(5,2) NOT NULL
-            )
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS series_history (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                year INT NOT NULL UNIQUE,
-                champion VARCHAR(100) NOT NULL,
-                runner_up VARCHAR(100) NOT NULL,
-                score VARCHAR(10) NOT NULL,
-                finals_mvp VARCHAR(100) NOT NULL,
-                total_games INT NOT NULL
-            )
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS simulation_logs (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                simulated_at DATETIME NOT NULL,
-                team_a VARCHAR(100) NOT NULL,
-                team_b VARCHAR(100) NOT NULL,
-                iterations INT NOT NULL,
-                team_a_win_pct DECIMAL(5,2) NOT NULL,
-                team_b_win_pct DECIMAL(5,2) NOT NULL
-            )
-        """)
-
-        cursor.execute("SELECT COUNT(*) FROM team_stats")
-        if cursor.fetchone()[0] == 0:
-            team_data = [
-                ('2001 Los Angeles Lakers', 108.4, 104.8), ('2001 Philadelphia 76ers', 101.8, 98.9),
-                ('2002 Los Angeles Lakers', 109.4, 101.7), ('2002 New Jersey Nets', 101.1, 99.5),
-                ('2003 San Antonio Spurs', 105.6, 99.7), ('2003 New Jersey Nets', 100.0, 96.0),
-                ('2004 Detroit Pistons', 102.0, 95.4), ('2004 Los Angeles Lakers', 105.5, 103.2),
-                ('2005 San Antonio Spurs', 107.5, 98.8), ('2005 Detroit Pistons', 103.9, 98.1),
-                ('2006 Miami Heat', 108.7, 104.3), ('2006 Dallas Mavericks', 111.8, 105.0),
-                ('2007 San Antonio Spurs', 109.2, 99.9), ('2007 Cleveland Cavaliers', 103.8, 101.3),
-                ('2008 Boston Celtics', 110.2, 98.9), ('2008 Los Angeles Lakers', 113.0, 105.5),
-                ('2009 Los Angeles Lakers', 112.8, 104.7), ('2009 Orlando Magic', 108.6, 101.9),
-                ('2010 Los Angeles Lakers', 108.8, 103.7), ('2010 Boston Celtics', 107.7, 103.8),
-                ('2011 Dallas Mavericks', 109.7, 105.0), ('2011 Miami Heat', 111.7, 103.5),
-                ('2012 Miami Heat', 108.5, 100.2), ('2012 Oklahoma City Thunder', 109.8, 103.2),
-                ('2013 Miami Heat', 112.3, 103.1), ('2013 San Antonio Spurs', 108.1, 101.6),
-                ('2014 San Antonio Spurs', 110.5, 102.4), ('2014 Miami Heat', 109.0, 105.8),
-                ('2015 Golden State Warriors', 111.6, 101.4), ('2015 Cleveland Cavaliers', 109.8, 106.3),
-                ('2016 Cleveland Cavaliers', 110.9, 104.2), ('2016 Golden State Warriors', 114.5, 103.8),
-                ('2017 Golden State Warriors', 115.6, 102.5), ('2017 Cleveland Cavaliers', 113.6, 108.0),
-                ('2018 Golden State Warriors', 113.6, 107.7), ('2018 Cleveland Cavaliers', 111.1, 110.6),
-                ('2019 Toronto Raptors', 113.1, 107.1), ('2019 Golden State Warriors', 115.9, 109.0),
-                ('2020 Los Angeles Lakers', 112.0, 105.6), ('2020 Miami Heat', 112.5, 109.8),
-                ('2021 Milwaukee Bucks', 117.2, 111.0), ('2021 Phoenix Suns', 117.2, 111.3),
-                ('2022 Golden State Warriors', 112.5, 106.6), ('2022 Boston Celtics', 114.4, 106.9),
-                ('2023 Denver Nuggets', 117.6, 113.5), ('2023 Miami Heat', 113.0, 112.8),
-                ('2024 Boston Celtics', 122.2, 109.2), ('2024 Dallas Mavericks', 117.0, 114.9),
-                ('2025 Oklahoma City Thunder', 118.5, 108.2), ('2025 Indiana Pacers', 119.8, 115.1),
-                ('2026 Boston Celtics', 121.5, 110.1), ('2026 Oklahoma City Thunder', 119.2, 108.7)
-            ]
-            cursor.executemany(
-                "INSERT INTO team_stats (team_name, off_rating, def_rating) VALUES (%s, %s, %s)",
-                team_data
-            )
-
-        cursor.execute("SELECT COUNT(*) FROM series_history")
-        if cursor.fetchone()[0] == 0:
-            history_data = [
-                (2001, 'Los Angeles Lakers', 'Philadelphia 76ers', '4-1', "Shaquille O'Neal", 5),
-                (2002, 'Los Angeles Lakers', 'New Jersey Nets', '4-0', "Shaquille O'Neal", 4),
-                (2003, 'San Antonio Spurs', 'New Jersey Nets', '4-2', 'Tim Duncan', 6),
-                (2004, 'Detroit Pistons', 'Los Angeles Lakers', '4-1', 'Chauncey Billups', 5),
-                (2005, 'San Antonio Spurs', 'Detroit Pistons', '4-3', 'Tim Duncan', 7),
-                (2006, 'Miami Heat', 'Dallas Mavericks', '4-2', 'Dwyane Wade', 6),
-                (2007, 'San Antonio Spurs', 'Cleveland Cavaliers', '4-0', 'Tony Parker', 4),
-                (2008, 'Boston Celtics', 'Los Angeles Lakers', '4-2', 'Paul Pierce', 6),
-                (2009, 'Los Angeles Lakers', 'Orlando Magic', '4-1', 'Kobe Bryant', 5),
-                (2010, 'Los Angeles Lakers', 'Boston Celtics', '4-3', 'Kobe Bryant', 7),
-                (2011, 'Dallas Mavericks', 'Miami Heat', '4-2', 'Dirk Nowitzki', 6),
-                (2012, 'Miami Heat', 'Oklahoma City Thunder', '4-1', 'LeBron James', 5),
-                (2013, 'Miami Heat', 'San Antonio Spurs', '4-3', 'LeBron James', 7),
-                (2014, 'San Antonio Spurs', 'Miami Heat', '4-1', 'Kawhi Leonard', 5),
-                (2015, 'Golden State Warriors', 'Cleveland Cavaliers', '4-2', 'Andre Iguodala', 6),
-                (2016, 'Cleveland Cavaliers', 'Golden State Warriors', '4-3', 'LeBron James', 7),
-                (2017, 'Golden State Warriors', 'Cleveland Cavaliers', '4-1', 'Kevin Durant', 5),
-                (2018, 'Golden State Warriors', 'Cleveland Cavaliers', '4-0', 'Kevin Durant', 4),
-                (2019, 'Toronto Raptors', 'Golden State Warriors', '4-2', 'Kawhi Leonard', 6),
-                (2020, 'Los Angeles Lakers', 'Miami Heat', '4-2', 'LeBron James', 6),
-                (2021, 'Milwaukee Bucks', 'Phoenix Suns', '4-2', 'Giannis Antetokounmpo', 6),
-                (2022, 'Golden State Warriors', 'Boston Celtics', '4-2', 'Stephen Curry', 6),
-                (2023, 'Denver Nuggets', 'Miami Heat', '4-1', 'Nikola Jokic', 5),
-                (2024, 'Boston Celtics', 'Dallas Mavericks', '4-1', 'Jaylen Brown', 5),
-                (2025, 'Oklahoma City Thunder', 'Indiana Pacers', '4-3', 'Shai Gilgeous-Alexander', 7),
-                (2026, 'Boston Celtics', 'Oklahoma City Thunder', '4-2', 'Jayson Tatum', 6)
-            ]
-            cursor.executemany(
-                "INSERT INTO series_history (year, champion, runner_up, score, finals_mvp, total_games) VALUES (%s, %s, %s, %s, %s, %s)",
-                history_data
-            )
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        print(f"Database Initialization Notice: {e}")
-
-
-initdatabase()
-
+def getserverconnection():
+    return mysql.connector.connect(
+        host=dbhost,
+        port=dbport,
+        user=dbuser,
+        password=dbpassword
+    )
 
 def getdbconnection():
     return mysql.connector.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME
+        host=dbhost,
+        port=dbport,
+        user=dbuser,
+        password=dbpassword,
+        database=dbname
     )
 
-
-def log_simulation(team_a, team_b, iterations, pct_a, pct_b):
+def initdatabase():
     try:
+        conn = getserverconnection()
+        cursor = conn.cursor()
+        cursor.execute("CREATE DATABASE IF NOT EXISTS " + dbname)
+        cursor.close()
+        conn.close()
+
         conn = getdbconnection()
         cursor = conn.cursor()
-        query = """
-            INSERT INTO simulation_logs 
-            (simulated_at, team_a, team_b, iterations, team_a_win_pct, team_b_win_pct)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        cursor.execute(query, (now, team_a, team_b, int(iterations), float(pct_a), float(pct_b)))
+
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS teamstats ("
+            "teamid INT PRIMARY KEY, "
+            "teamname VARCHAR(100) NOT NULL UNIQUE, "
+            "seasonyear INT NOT NULL, "
+            "conference VARCHAR(20) NOT NULL, "
+            "offrating DECIMAL(5,2) NOT NULL, "
+            "defrating DECIMAL(5,2) NOT NULL, "
+            "pace DECIMAL(5,2) NOT NULL, "
+            "coach VARCHAR(100) NOT NULL)"
+        )
+
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS serieshistory ("
+            "year INT PRIMARY KEY, "
+            "champion VARCHAR(100) NOT NULL, "
+            "runnerup VARCHAR(100) NOT NULL, "
+            "seriesresult VARCHAR(20) NOT NULL, "
+            "finalsmvp VARCHAR(100) NOT NULL, "
+            "totalgames INT NOT NULL, "
+            "avgattendance INT NOT NULL)"
+        )
+
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS mvpstats ("
+            "year INT PRIMARY KEY, "
+            "playername VARCHAR(100) NOT NULL, "
+            "team VARCHAR(100) NOT NULL, "
+            "ppg DECIMAL(4,1) NOT NULL, "
+            "rpg DECIMAL(4,1) NOT NULL, "
+            "apg DECIMAL(4,1) NOT NULL, "
+            "fgpct DECIMAL(4,1) NOT NULL)"
+        )
+
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS arenainfo ("
+            "arenaid INT PRIMARY KEY, "
+            "arenaname VARCHAR(100) NOT NULL, "
+            "city VARCHAR(100) NOT NULL, "
+            "franchise VARCHAR(100) NOT NULL, "
+            "capacity INT NOT NULL, "
+            "openedyear INT NOT NULL)"
+        )
+
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS simlogs ("
+            "simid INT PRIMARY KEY, "
+            "simdate VARCHAR(50) NOT NULL, "
+            "teama VARCHAR(100) NOT NULL, "
+            "teamb VARCHAR(100) NOT NULL, "
+            "winner VARCHAR(100) NOT NULL, "
+            "predictedgames INT NOT NULL, "
+            "margin DECIMAL(5,2) NOT NULL)"
+        )
+
+        cursor.execute("SELECT COUNT(*) FROM teamstats")
+        if cursor.fetchone()[0] == 0:
+            teamdata = [
+                (1, "1991 Chicago Bulls", 1991, "East", 114.6, 105.2, 95.6, "Phil Jackson"),
+                (2, "1991 Los Angeles Lakers", 1991, "West", 112.1, 106.4, 94.8, "Mike Dunleavy"),
+                (3, "1992 Chicago Bulls", 1992, "East", 115.5, 104.5, 94.4, "Phil Jackson"),
+                (4, "1992 Portland Trail Blazers", 1992, "West", 111.4, 104.2, 99.1, "Rick Adelman"),
+                (5, "1993 Chicago Bulls", 1993, "East", 112.9, 106.1, 92.5, "Phil Jackson"),
+                (6, "1993 Phoenix Suns", 1993, "West", 113.3, 106.7, 99.3, "Paul Westphal"),
+                (7, "1994 Houston Rockets", 1994, "West", 105.9, 101.4, 94.8, "Rudy Tomjanovich"),
+                (8, "1994 New York Knicks", 1994, "East", 105.7, 98.2, 91.5, "Pat Riley"),
+                (9, "1995 Houston Rockets", 1995, "West", 109.7, 107.4, 94.2, "Rudy Tomjanovich"),
+                (10, "1995 Orlando Magic", 1995, "East", 115.1, 107.8, 95.8, "Brian Hill"),
+                (11, "1996 Chicago Bulls", 1996, "East", 115.2, 101.8, 91.1, "Phil Jackson"),
+                (12, "1996 Seattle SuperSonics", 1996, "West", 110.3, 102.1, 93.8, "George Karl"),
+                (13, "1997 Chicago Bulls", 1997, "East", 114.4, 102.4, 90.0, "Phil Jackson"),
+                (14, "1997 Utah Jazz", 1997, "West", 113.6, 104.0, 90.4, "Jerry Sloan"),
+                (15, "1998 Chicago Bulls", 1998, "East", 107.7, 99.8, 89.0, "Phil Jackson"),
+                (16, "1998 Utah Jazz", 1998, "West", 112.7, 105.4, 89.2, "Jerry Sloan"),
+                (17, "1999 San Antonio Spurs", 1999, "West", 104.0, 95.0, 88.6, "Gregg Popovich"),
+                (18, "1999 New York Knicks", 1999, "East", 101.2, 98.4, 86.8, "Jeff Van Gundy"),
+                (19, "2000 Los Angeles Lakers", 2000, "West", 107.3, 98.2, 93.3, "Phil Jackson"),
+                (20, "2000 Indiana Pacers", 2000, "East", 108.5, 103.6, 92.4, "Larry Bird"),
+                (21, "2001 Los Angeles Lakers", 2001, "West", 108.4, 104.8, 91.7, "Phil Jackson"),
+                (22, "2001 Philadelphia 76ers", 2001, "East", 101.8, 98.9, 90.6, "Larry Brown"),
+                (23, "2002 Los Angeles Lakers", 2002, "West", 109.4, 101.7, 92.1, "Phil Jackson"),
+                (24, "2002 New Jersey Nets", 2002, "East", 101.1, 99.5, 91.8, "Byron Scott"),
+                (25, "2003 San Antonio Spurs", 2003, "West", 105.6, 99.7, 90.0, "Gregg Popovich"),
+                (26, "2003 New Jersey Nets", 2003, "East", 100.0, 96.0, 91.2, "Byron Scott"),
+                (27, "2004 Detroit Pistons", 2004, "East", 102.0, 95.4, 87.9, "Larry Brown"),
+                (28, "2004 Los Angeles Lakers", 2004, "West", 105.5, 103.2, 91.8, "Phil Jackson"),
+                (29, "2005 San Antonio Spurs", 2005, "West", 107.5, 98.8, 88.9, "Gregg Popovich"),
+                (30, "2005 Detroit Pistons", 2005, "East", 103.9, 98.1, 86.8, "Larry Brown"),
+                (31, "2006 Miami Heat", 2006, "East", 108.7, 104.3, 91.6, "Pat Riley"),
+                (32, "2006 Dallas Mavericks", 2006, "West", 111.8, 105.0, 89.6, "Avery Johnson"),
+                (33, "2007 San Antonio Spurs", 2007, "West", 109.2, 99.9, 89.8, "Gregg Popovich"),
+                (34, "2007 Cleveland Cavaliers", 2007, "East", 103.8, 101.3, 90.8, "Mike Brown"),
+                (35, "2008 Boston Celtics", 2008, "East", 110.2, 98.9, 90.9, "Doc Rivers"),
+                (36, "2008 Los Angeles Lakers", 2008, "West", 113.0, 105.5, 95.6, "Phil Jackson"),
+                (37, "2009 Los Angeles Lakers", 2009, "West", 112.8, 104.7, 94.3, "Phil Jackson"),
+                (38, "2009 Orlando Magic", 2009, "East", 108.6, 101.9, 92.2, "Stan Van Gundy"),
+                (39, "2010 Los Angeles Lakers", 2010, "West", 108.8, 103.7, 92.8, "Phil Jackson"),
+                (40, "2010 Boston Celtics", 2010, "East", 107.7, 103.8, 91.6, "Doc Rivers"),
+                (41, "2011 Dallas Mavericks", 2011, "West", 109.7, 105.0, 91.3, "Rick Carlisle"),
+                (42, "2011 Miami Heat", 2011, "East", 111.7, 103.5, 90.9, "Erik Spoelstra"),
+                (43, "2012 Miami Heat", 2012, "East", 108.5, 100.2, 91.2, "Erik Spoelstra"),
+                (44, "2012 Oklahoma City Thunder", 2012, "West", 109.8, 103.2, 93.0, "Scott Brooks"),
+                (45, "2013 Miami Heat", 2013, "East", 112.3, 103.1, 90.7, "Erik Spoelstra"),
+                (46, "2013 San Antonio Spurs", 2013, "West", 108.1, 101.6, 94.2, "Gregg Popovich"),
+                (47, "2014 San Antonio Spurs", 2014, "West", 110.5, 102.4, 95.0, "Gregg Popovich"),
+                (48, "2014 Miami Heat", 2014, "East", 109.0, 105.8, 91.2, "Erik Spoelstra"),
+                (49, "2015 Golden State Warriors", 2015, "West", 111.6, 101.4, 98.3, "Steve Kerr"),
+                (50, "2015 Cleveland Cavaliers", 2015, "East", 109.8, 106.3, 92.3, "David Blatt"),
+                (51, "2016 Cleveland Cavaliers", 2016, "East", 110.9, 104.2, 93.3, "Tyronn Lue"),
+                (52, "2016 Golden State Warriors", 2016, "West", 114.5, 103.8, 99.3, "Steve Kerr"),
+                (53, "2017 Golden State Warriors", 2017, "West", 115.6, 102.5, 99.8, "Steve Kerr"),
+                (54, "2017 Cleveland Cavaliers", 2017, "East", 113.6, 108.0, 96.2, "Tyronn Lue"),
+                (55, "2018 Golden State Warriors", 2018, "West", 113.6, 107.7, 99.6, "Steve Kerr"),
+                (56, "2018 Cleveland Cavaliers", 2018, "East", 111.1, 110.6, 98.0, "Tyronn Lue"),
+                (57, "2019 Toronto Raptors", 2019, "East", 113.1, 107.1, 100.2, "Nick Nurse"),
+                (58, "2019 Golden State Warriors", 2019, "West", 115.9, 109.0, 100.9, "Steve Kerr"),
+                (59, "2020 Los Angeles Lakers", 2020, "West", 112.0, 105.6, 100.9, "Frank Vogel"),
+                (60, "2020 Miami Heat", 2020, "East", 112.5, 109.8, 98.3, "Erik Spoelstra"),
+                (61, "2021 Milwaukee Bucks", 2021, "East", 117.2, 111.0, 102.2, "Mike Budenholzer"),
+                (62, "2021 Phoenix Suns", 2021, "West", 117.2, 111.3, 97.2, "Monty Williams"),
+                (63, "2022 Golden State Warriors", 2022, "West", 112.5, 106.6, 98.4, "Steve Kerr"),
+                (64, "2022 Boston Celtics", 2022, "East", 114.4, 106.9, 96.6, "Ime Udoka"),
+                (65, "2023 Denver Nuggets", 2023, "West", 117.6, 113.5, 98.1, "Michael Malone"),
+                (66, "2023 Miami Heat", 2023, "East", 113.0, 112.8, 96.3, "Erik Spoelstra"),
+                (67, "2024 Boston Celtics", 2024, "East", 122.2, 109.2, 97.9, "Joe Mazzulla"),
+                (68, "2024 Dallas Mavericks", 2024, "West", 117.0, 114.9, 100.1, "Jason Kidd"),
+                (69, "2025 Oklahoma City Thunder", 2025, "West", 118.5, 108.2, 100.4, "Mark Daigneault"),
+                (70, "2025 Indiana Pacers", 2025, "East", 119.8, 115.1, 101.8, "Rick Carlisle"),
+                (71, "2026 Boston Celtics", 2026, "East", 121.5, 110.1, 98.5, "Joe Mazzulla"),
+                (72, "2026 Oklahoma City Thunder", 2026, "West", 119.2, 108.7, 99.9, "Mark Daigneault")
+            ]
+            cursor.executemany(
+                "INSERT INTO teamstats VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                teamdata
+            )
+
+        cursor.execute("SELECT COUNT(*) FROM serieshistory")
+        if cursor.fetchone()[0] == 0:
+            historydata = [
+                (1991, "Chicago Bulls", "Los Angeles Lakers", "4 to 1", "Michael Jordan", 5, 17950),
+                (1992, "Chicago Bulls", "Portland Trail Blazers", "4 to 2", "Michael Jordan", 6, 18100),
+                (1993, "Chicago Bulls", "Phoenix Suns", "4 to 2", "Michael Jordan", 6, 18800),
+                (1994, "Houston Rockets", "New York Knicks", "4 to 3", "Hakeem Olajuwon", 7, 17800),
+                (1995, "Houston Rockets", "Orlando Magic", "4 to 0", "Hakeem Olajuwon", 4, 17100),
+                (1996, "Chicago Bulls", "Seattle SuperSonics", "4 to 2", "Michael Jordan", 6, 20200),
+                (1997, "Chicago Bulls", "Utah Jazz", "4 to 2", "Michael Jordan", 6, 21800),
+                (1998, "Chicago Bulls", "Utah Jazz", "4 to 2", "Michael Jordan", 6, 22100),
+                (1999, "San Antonio Spurs", "New York Knicks", "4 to 1", "Tim Duncan", 5, 25400),
+                (2000, "Los Angeles Lakers", "Indiana Pacers", "4 to 2", "Shaquille O'Neal", 6, 18900),
+                (2001, "Los Angeles Lakers", "Philadelphia 76ers", "4 to 1", "Shaquille O'Neal", 5, 19800),
+                (2002, "Los Angeles Lakers", "New Jersey Nets", "4 to 0", "Shaquille O'Neal", 4, 19400),
+                (2003, "San Antonio Spurs", "New Jersey Nets", "4 to 2", "Tim Duncan", 6, 18700),
+                (2004, "Detroit Pistons", "Los Angeles Lakers", "4 to 1", "Chauncey Billups", 5, 20900),
+                (2005, "San Antonio Spurs", "Detroit Pistons", "4 to 3", "Tim Duncan", 7, 20400),
+                (2006, "Miami Heat", "Dallas Mavericks", "4 to 2", "Dwyane Wade", 6, 20100),
+                (2007, "San Antonio Spurs", "Cleveland Cavaliers", "4 to 0", "Tony Parker", 4, 19700),
+                (2008, "Boston Celtics", "Los Angeles Lakers", "4 to 2", "Paul Pierce", 6, 18800),
+                (2009, "Los Angeles Lakers", "Orlando Magic", "4 to 1", "Kobe Bryant", 5, 18400),
+                (2010, "Los Angeles Lakers", "Boston Celtics", "4 to 3", "Kobe Bryant", 7, 18900),
+                (2011, "Dallas Mavericks", "Miami Heat", "4 to 2", "Dirk Nowitzki", 6, 20050),
+                (2012, "Miami Heat", "Oklahoma City Thunder", "4 to 1", "LeBron James", 5, 19300),
+                (2013, "Miami Heat", "San Antonio Spurs", "4 to 3", "LeBron James", 7, 19500),
+                (2014, "San Antonio Spurs", "Miami Heat", "4 to 1", "Kawhi Leonard", 5, 19100),
+                (2015, "Golden State Warriors", "Cleveland Cavaliers", "4 to 2", "Andre Iguodala", 6, 20100),
+                (2016, "Cleveland Cavaliers", "Golden State Warriors", "4 to 3", "LeBron James", 7, 20200),
+                (2017, "Golden State Warriors", "Cleveland Cavaliers", "4 to 1", "Kevin Durant", 5, 20150),
+                (2018, "Golden State Warriors", "Cleveland Cavaliers", "4 to 0", "Kevin Durant", 4, 20050),
+                (2019, "Toronto Raptors", "Golden State Warriors", "4 to 2", "Kawhi Leonard", 6, 19800),
+                (2020, "Los Angeles Lakers", "Miami Heat", "4 to 2", "LeBron James", 6, 0),
+                (2021, "Milwaukee Bucks", "Phoenix Suns", "4 to 2", "Giannis Antetokounmpo", 6, 17100),
+                (2022, "Golden State Warriors", "Boston Celtics", "4 to 2", "Stephen Curry", 6, 18600),
+                (2023, "Denver Nuggets", "Miami Heat", "4 to 1", "Nikola Jokic", 5, 19600),
+                (2024, "Boston Celtics", "Dallas Mavericks", "4 to 1", "Jaylen Brown", 5, 19700),
+                (2025, "Oklahoma City Thunder", "Indiana Pacers", "4 to 3", "Shai Gilgeous Alexander", 7, 18200),
+                (2026, "Boston Celtics", "Oklahoma City Thunder", "4 to 2", "Jayson Tatum", 6, 18900)
+            ]
+            cursor.executemany(
+                "INSERT INTO serieshistory VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                historydata
+            )
+
+        cursor.execute("SELECT COUNT(*) FROM mvpstats")
+        if cursor.fetchone()[0] == 0:
+            mvpdata = [
+                (1991, "Michael Jordan", "Chicago Bulls", 31.2, 6.6, 11.4, 55.8),
+                (1992, "Michael Jordan", "Chicago Bulls", 35.8, 4.8, 6.5, 52.6),
+                (1993, "Michael Jordan", "Chicago Bulls", 41.0, 8.5, 6.3, 50.8),
+                (1994, "Hakeem Olajuwon", "Houston Rockets", 26.9, 9.1, 3.6, 50.0),
+                (1995, "Hakeem Olajuwon", "Houston Rockets", 32.8, 11.5, 5.5, 48.3),
+                (1996, "Michael Jordan", "Chicago Bulls", 27.3, 5.3, 4.2, 41.5),
+                (1997, "Michael Jordan", "Chicago Bulls", 32.3, 7.0, 6.0, 45.6),
+                (1998, "Michael Jordan", "Chicago Bulls", 33.5, 4.0, 2.3, 42.7),
+                (1999, "Tim Duncan", "San Antonio Spurs", 27.4, 14.0, 2.4, 53.7),
+                (2000, "Shaquille O'Neal", "Los Angeles Lakers", 38.0, 16.7, 2.3, 61.1),
+                (2001, "Shaquille O'Neal", "Los Angeles Lakers", 33.0, 15.8, 4.8, 57.3),
+                (2002, "Shaquille O'Neal", "Los Angeles Lakers", 36.3, 12.3, 3.8, 59.5),
+                (2003, "Tim Duncan", "San Antonio Spurs", 24.2, 17.0, 5.3, 49.5),
+                (2004, "Chauncey Billups", "Detroit Pistons", 21.0, 3.2, 5.2, 50.9),
+                (2005, "Tim Duncan", "San Antonio Spurs", 20.6, 14.1, 2.1, 41.9),
+                (2006, "Dwyane Wade", "Miami Heat", 34.7, 7.8, 3.8, 46.8),
+                (2007, "Tony Parker", "San Antonio Spurs", 24.5, 5.0, 3.3, 56.8),
+                (2008, "Paul Pierce", "Boston Celtics", 21.8, 4.5, 6.3, 43.2),
+                (2009, "Kobe Bryant", "Los Angeles Lakers", 32.4, 5.6, 7.4, 43.0),
+                (2010, "Kobe Bryant", "Los Angeles Lakers", 28.6, 8.0, 3.9, 40.5),
+                (2011, "Dirk Nowitzki", "Dallas Mavericks", 26.0, 9.7, 2.0, 41.6),
+                (2012, "LeBron James", "Miami Heat", 28.6, 10.2, 7.4, 47.2),
+                (2013, "LeBron James", "Miami Heat", 25.3, 10.9, 7.0, 44.7),
+                (2014, "Kawhi Leonard", "San Antonio Spurs", 17.8, 6.4, 2.0, 61.2),
+                (2015, "Andre Iguodala", "Golden State Warriors", 16.3, 5.8, 4.0, 52.1),
+                (2016, "LeBron James", "Cleveland Cavaliers", 29.7, 11.3, 8.9, 49.4),
+                (2017, "Kevin Durant", "Golden State Warriors", 35.2, 8.2, 5.4, 55.6),
+                (2018, "Kevin Durant", "Golden State Warriors", 28.8, 10.8, 7.5, 52.6),
+                (2019, "Kawhi Leonard", "Toronto Raptors", 28.5, 9.8, 4.2, 43.4),
+                (2020, "LeBron James", "Los Angeles Lakers", 29.8, 11.8, 8.5, 59.1),
+                (2021, "Giannis Antetokounmpo", "Milwaukee Bucks", 35.2, 13.2, 5.0, 61.8),
+                (2022, "Stephen Curry", "Golden State Warriors", 31.2, 6.0, 5.0, 48.2),
+                (2023, "Nikola Jokic", "Denver Nuggets", 30.2, 14.0, 7.2, 58.3),
+                (2024, "Jaylen Brown", "Boston Celtics", 20.8, 5.4, 5.0, 44.0),
+                (2025, "Shai Gilgeous Alexander", "Oklahoma City Thunder", 31.8, 6.2, 6.8, 51.4),
+                (2026, "Jayson Tatum", "Boston Celtics", 27.6, 8.8, 6.1, 47.5)
+            ]
+            cursor.executemany(
+                "INSERT INTO mvpstats VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                mvpdata
+            )
+
+        cursor.execute("SELECT COUNT(*) FROM arenainfo")
+        if cursor.fetchone()[0] == 0:
+            arenadata = [
+                (1, "United Center", "Chicago", "Chicago Bulls", 20917, 1994),
+                (2, "Crypto.com Arena", "Los Angeles", "Los Angeles Lakers", 18997, 1999),
+                (3, "TD Garden", "Boston", "Boston Celtics", 19156, 1995),
+                (4, "Frost Bank Center", "San Antonio", "San Antonio Spurs", 18418, 2002),
+                (5, "Kaseya Center", "Miami", "Miami Heat", 19600, 1999),
+                (6, "Chase Center", "San Francisco", "Golden State Warriors", 18064, 2019),
+                (7, "Rocket Mortgage FieldHouse", "Cleveland", "Cleveland Cavaliers", 19432, 1994),
+                (8, "American Airlines Center", "Dallas", "Dallas Mavericks", 19200, 2001),
+                (9, "Little Caesars Arena", "Detroit", "Detroit Pistons", 20332, 2017),
+                (10, "Toyota Center", "Houston", "Houston Rockets", 18055, 2003),
+                (11, "Scotiabank Arena", "Toronto", "Toronto Raptors", 19800, 1999),
+                (12, "Fiserv Forum", "Milwaukee", "Milwaukee Bucks", 17385, 2018),
+                (13, "Ball Arena", "Denver", "Denver Nuggets", 19520, 1999),
+                (14, "Paycom Center", "Oklahoma City", "Oklahoma City Thunder", 18203, 2002),
+                (15, "Gainbridge Fieldhouse", "Indianapolis", "Indiana Pacers", 17923, 1999),
+                (16, "Madison Square Garden", "New York", "New York Knicks", 19812, 1968),
+                (17, "Wells Fargo Center", "Philadelphia", "Philadelphia 76ers", 20478, 1996),
+                (18, "Footprint Center", "Phoenix", "Phoenix Suns", 17071, 1992),
+                (19, "Kia Center", "Orlando", "Orlando Magic", 18846, 2010),
+                (20, "Delta Center", "Salt Lake City", "Utah Jazz", 18306, 1991),
+                (21, "Moda Center", "Portland", "Portland Trail Blazers", 19393, 1995),
+                (22, "Barclays Center", "Brooklyn", "Brooklyn Nets", 17732, 2012)
+            ]
+            cursor.executemany(
+                "INSERT INTO arenainfo VALUES (%s, %s, %s, %s, %s, %s)",
+                arenadata
+            )
+
         conn.commit()
         cursor.close()
         conn.close()
     except Exception as e:
-        print(f"Failed to log simulation to database: {e}")
+        print("Database setup error:", e)
 
+def printline(length):
+    print("=" * length)
 
-def fetch_simulation_logs():
+def printheader(title):
+    print()
+    printline(78)
+    print(title.center(78))
+    printline(78)
+
+def pausescreen():
+    print()
+    input("Press Enter to return to menu...")
+
+def readint(prompt, minval, maxval):
+    while True:
+        raw = input(prompt).strip()
+        try:
+            val = int(raw)
+            if val < minval or val > maxval:
+                print("Please enter a number between", minval, "and", maxval)
+            else:
+                return val
+        except ValueError:
+            print("Invalid input. Please enter a whole number.")
+
+def readfloat(prompt, minval, maxval):
+    while True:
+        raw = input(prompt).strip()
+        try:
+            val = float(raw)
+            if val < minval or val > maxval:
+                print("Please enter a value between", minval, "and", maxval)
+            else:
+                return round(val, 2)
+        except ValueError:
+            print("Invalid input. Please enter a decimal number.")
+
+def readtext(prompt):
+    while True:
+        val = input(prompt).strip()
+        if len(val) > 0:
+            return val
+        print("Input cannot be empty. Please try again.")
+
+def formatcell(value, width):
+    text = str(value)
+    if len(text) > width:
+        return text[:width]
+    return text.ljust(width)
+
+def printtable(headers, widths, rows):
+    totalwidth = sum(widths) + (len(widths) * 3) + 1
+    printline(totalwidth)
+    headerline = "| "
+    for i in range(len(headers)):
+        headerline = headerline + formatcell(headers[i], widths[i]) + " | "
+    print(headerline)
+    printline(totalwidth)
+    if len(rows) == 0:
+        print("| " + "No matching records found.".ljust(totalwidth - 4) + " |")
+    else:
+        for row in rows:
+            rowline = "| "
+            for i in range(len(widths)):
+                rowline = rowline + formatcell(row[i], widths[i]) + " | "
+            print(rowline)
+    printline(totalwidth)
+    print("Total Records Displayed:", len(rows))
+
+def viewallteams():
+    printheader("ALL NBA FINALS TEAMS IN DATABASE")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamid, teamname, seasonyear, conference, offrating, defrating, "
+        "ROUND(offrating - defrating, 2) AS netrating, pace, coach "
+        "FROM teamstats ORDER BY seasonyear ASC, teamid ASC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Pace", "Head Coach"]
+    widths = [4, 28, 6, 6, 7, 7, 7, 6, 18]
+    printtable(headers, widths, rows)
+
+def viewteamsbyyear():
+    printheader("FILTER TEAMS BY SEASON YEAR RANGE")
+    startyear = readint("Enter Start Year (1991 to 2030): ", 1991, 2030)
+    endyear = readint("Enter End Year (1991 to 2030): ", startyear, 2030)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamid, teamname, seasonyear, conference, offrating, defrating, "
+        "ROUND(offrating - defrating, 2), coach "
+        "FROM teamstats WHERE seasonyear BETWEEN %s AND %s ORDER BY seasonyear DESC",
+        (startyear, endyear)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Head Coach"]
+    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    printtable(headers, widths, rows)
+
+def viewteamsbyconference():
+    printheader("FILTER TEAMS BY CONFERENCE")
+    print("1. Eastern Conference (East)")
+    print("2. Western Conference (West)")
+    choice = readint("Choose conference (1 or 2): ", 1, 2)
+    conf = "East" if choice == 1 else "West"
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamid, teamname, seasonyear, offrating, defrating, "
+        "ROUND(offrating - defrating, 2), pace, coach "
+        "FROM teamstats WHERE conference = %s ORDER BY seasonyear DESC",
+        (conf,)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Team Name", "Year", "OffRtg", "DefRtg", "NetRtg", "Pace", "Head Coach"]
+    widths = [4, 28, 6, 7, 7, 7, 6, 18]
+    printtable(headers, widths, rows)
+
+def searchteambyname():
+    printheader("SEARCH TEAM BY FRANCHISE OR COACH NAME")
+    keyword = readtext("Enter team name or coach keyword: ")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    pattern = "%" + keyword + "%"
+    cursor.execute(
+        "SELECT teamid, teamname, seasonyear, conference, offrating, defrating, "
+        "ROUND(offrating - defrating, 2), coach "
+        "FROM teamstats WHERE teamname LIKE %s OR coach LIKE %s ORDER BY seasonyear DESC",
+        (pattern, pattern)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Head Coach"]
+    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    printtable(headers, widths, rows)
+
+def topoffensiveteams():
+    printheader("TOP 15 OFFENSIVE FINALS TEAMS OF ALL TIME")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamid, teamname, seasonyear, conference, offrating, defrating, "
+        "ROUND(offrating - defrating, 2), coach "
+        "FROM teamstats ORDER BY offrating DESC LIMIT 15"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Head Coach"]
+    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    printtable(headers, widths, rows)
+
+def topdefensiveteams():
+    printheader("TOP 15 DEFENSIVE FINALS TEAMS OF ALL TIME (LOWEST DEFRTG)")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamid, teamname, seasonyear, conference, defrating, offrating, "
+        "ROUND(offrating - defrating, 2), coach "
+        "FROM teamstats ORDER BY defrating ASC LIMIT 15"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Team Name", "Year", "Conf", "DefRtg", "OffRtg", "NetRtg", "Head Coach"]
+    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    printtable(headers, widths, rows)
+
+def addnewteam():
+    printheader("ADD NEW NBA FINALS TEAM RECORD")
+    seasonyear = readint("Enter Season Year (1950 to 2035): ", 1950, 2035)
+    franchise = readtext("Enter Franchise Name (e.g., Boston Celtics): ")
+    teamname = str(seasonyear) + " " + franchise
+    print("Select Conference: 1. East  2. West")
+    confchoice = readint("Enter choice (1 or 2): ", 1, 2)
+    conference = "East" if confchoice == 1 else "West"
+    offrating = readfloat("Enter Offensive Rating (80.0 to 140.0): ", 80.0, 140.0)
+    defrating = readfloat("Enter Defensive Rating (80.0 to 140.0): ", 80.0, 140.0)
+    pace = readfloat("Enter Team Pace (75.0 to 120.0): ", 75.0, 120.0)
+    coach = readtext("Enter Head Coach Name: ")
+
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COALESCE(MAX(teamid), 0) + 1 FROM teamstats")
+    newid = cursor.fetchone()[0]
     try:
-        conn = getdbconnection()
-        cursor = conn.cursor(dictionary=True)
-        query = """
-            SELECT 
-                simulated_at AS `Timestamp`,
-                team_a AS `Team A`,
-                team_b AS `Team B`,
-                iterations AS `Iterations`,
-                CONCAT(team_a_win_pct, '%') AS `Team A Win %`,
-                CONCAT(team_b_win_pct, '%') AS `Team B Win %`
-            FROM simulation_logs
-            ORDER BY id DESC
-            LIMIT 50
-        """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return pd.DataFrame(rows)
-    except Exception:
-        return pd.DataFrame()
-
-
-def clear_simulation_logs():
-    try:
-        conn = getdbconnection()
-        cursor = conn.cursor()
-        cursor.execute("TRUNCATE TABLE simulation_logs")
+        cursor.execute(
+            "INSERT INTO teamstats VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (newid, teamname, seasonyear, conference, offrating, defrating, pace, coach)
+        )
         conn.commit()
-        cursor.close()
-        conn.close()
-        return fetch_simulation_logs(), "Simulation logs cleared successfully."
+        print("Successfully added team:", teamname, "with ID:", newid)
     except Exception as e:
-        return fetch_simulation_logs(), f"Error clearing logs: {e}"
+        print("Error adding team record:", e)
+    cursor.close()
+    conn.close()
 
-
-def fetchserieshistory(startyear, endyear):
-    try:
-        conn = getdbconnection()
-        cursor = conn.cursor(dictionary=True)
-        query = """
-            SELECT year AS Year, champion AS Champion, runner_up AS Runner_Up, 
-                   score AS Score, finals_mvp AS Finals_MVP, total_games AS Total_Games
-            FROM series_history 
-            WHERE year BETWEEN %s AND %s 
-            ORDER BY year DESC
-        """
-        cursor.execute(query, (int(startyear), int(endyear)))
-        rows = cursor.fetchall()
+def updateteamratings():
+    printheader("UPDATE TEAM OFFENSIVE AND DEFENSIVE RATINGS")
+    teamid = readint("Enter Team ID to update: ", 1, 9999)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT teamname, offrating, defrating, pace FROM teamstats WHERE teamid = %s", (teamid,))
+    row = cursor.fetchone()
+    if not row:
+        print("No team found with ID:", teamid)
         cursor.close()
         conn.close()
-        return pd.DataFrame(rows)
+        return
+    print("Selected Team:", row[0])
+    print("Current OffRtg:", row[1], "| Current DefRtg:", row[2], "| Current Pace:", row[3])
+    newoff = readfloat("Enter New Offensive Rating (80.0 to 140.0): ", 80.0, 140.0)
+    newdef = readfloat("Enter New Defensive Rating (80.0 to 140.0): ", 80.0, 140.0)
+    newpace = readfloat("Enter New Pace (75.0 to 120.0): ", 75.0, 120.0)
+    cursor.execute(
+        "UPDATE teamstats SET offrating = %s, defrating = %s, pace = %s WHERE teamid = %s",
+        (newoff, newdef, newpace, teamid)
+    )
+    conn.commit()
+    print("Successfully updated ratings for", row[0])
+    cursor.close()
+    conn.close()
+
+def updateteamcoach():
+    printheader("UPDATE TEAM HEAD COACH")
+    teamid = readint("Enter Team ID to update: ", 1, 9999)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT teamname, coach FROM teamstats WHERE teamid = %s", (teamid,))
+    row = cursor.fetchone()
+    if not row:
+        print("No team found with ID:", teamid)
+        cursor.close()
+        conn.close()
+        return
+    print("Selected Team:", row[0], "| Current Coach:", row[1])
+    newcoach = readtext("Enter New Head Coach Name: ")
+    cursor.execute("UPDATE teamstats SET coach = %s WHERE teamid = %s", (newcoach, teamid))
+    conn.commit()
+    print("Successfully updated coach for", row[0])
+    cursor.close()
+    conn.close()
+
+def deleteteamrecord():
+    printheader("DELETE TEAM RECORD FROM DATABASE")
+    teamid = readint("Enter Team ID to delete: ", 1, 9999)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT teamname FROM teamstats WHERE teamid = %s", (teamid,))
+    row = cursor.fetchone()
+    if not row:
+        print("No team found with ID:", teamid)
+        cursor.close()
+        conn.close()
+        return
+    confirm = readtext("Type YES to confirm deletion of " + row[0] + ": ")
+    if confirm.upper() == "YES":
+        cursor.execute("DELETE FROM teamstats WHERE teamid = %s", (teamid,))
+        conn.commit()
+        print("Deleted team record:", row[0])
+    else:
+        print("Deletion cancelled.")
+    cursor.close()
+    conn.close()
+
+def teammenu():
+    while True:
+        printheader("MODULE 1: NBA FINALS TEAM STATS MANAGEMENT")
+        print("1. View All Teams in Database")
+        print("2. Filter Teams by Season Year Range")
+        print("3. Filter Teams by Conference (East / West)")
+        print("4. Search Teams by Franchise or Coach Name")
+        print("5. View Top 15 Offensive Teams")
+        print("6. View Top 15 Defensive Teams")
+        print("7. Add New Team Record (INSERT)")
+        print("8. Update Team Efficiency Ratings (UPDATE)")
+        print("9. Update Team Head Coach (UPDATE)")
+        print("10. Delete Team Record (DELETE)")
+        print("0. Return to Main Menu")
+        choice = readint("Enter your choice (0 to 10): ", 0, 10)
+        if choice == 1:
+            viewallteams()
+            pausescreen()
+        elif choice == 2:
+            viewteamsbyyear()
+            pausescreen()
+        elif choice == 3:
+            viewteamsbyconference()
+            pausescreen()
+        elif choice == 4:
+            searchteambyname()
+            pausescreen()
+        elif choice == 5:
+            topoffensiveteams()
+            pausescreen()
+        elif choice == 6:
+            topdefensiveteams()
+            pausescreen()
+        elif choice == 7:
+            addnewteam()
+            pausescreen()
+        elif choice == 8:
+            updateteamratings()
+            pausescreen()
+        elif choice == 9:
+            updateteamcoach()
+            pausescreen()
+        elif choice == 10:
+            deleteteamrecord()
+            pausescreen()
+        elif choice == 0:
+            break
+
+def viewallseries():
+    printheader("COMPLETE NBA FINALS SERIES ARCHIVE (1991 TO 2026)")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, champion, runnerup, seriesresult, finalsmvp, totalgames, avgattendance "
+        "FROM serieshistory ORDER BY year DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Games", "Attendance"]
+    widths = [6, 22, 22, 8, 22, 5, 10]
+    printtable(headers, widths, rows)
+
+def viewseriesbyyearrange():
+    printheader("QUERY FINALS SERIES BY YEAR RANGE")
+    startyear = readint("Enter Start Year: ", 1950, 2035)
+    endyear = readint("Enter End Year: ", startyear, 2035)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, champion, runnerup, seriesresult, finalsmvp, totalgames, avgattendance "
+        "FROM serieshistory WHERE year BETWEEN %s AND %s ORDER BY year DESC",
+        (startyear, endyear)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Games", "Attendance"]
+    widths = [6, 22, 22, 8, 22, 5, 10]
+    printtable(headers, widths, rows)
+
+def searchseriesbyteam():
+    printheader("SEARCH FINALS SERIES BY FRANCHISE")
+    team = readtext("Enter Franchise Name (e.g., Lakers, Bulls, Heat): ")
+    pattern = "%" + team + "%"
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, champion, runnerup, seriesresult, finalsmvp, totalgames "
+        "FROM serieshistory WHERE champion LIKE %s OR runnerup LIKE %s ORDER BY year DESC",
+        (pattern, pattern)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Games"]
+    widths = [6, 23, 23, 8, 22, 5]
+    printtable(headers, widths, rows)
+
+def viewgame7series():
+    printheader("CLASSIC 7 GAME NBA FINALS SERIES")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, champion, runnerup, seriesresult, finalsmvp, avgattendance "
+        "FROM serieshistory WHERE totalgames = 7 ORDER BY year DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Attendance"]
+    widths = [6, 23, 23, 8, 22, 10]
+    printtable(headers, widths, rows)
+
+def viewsweepseries():
+    printheader("NBA FINALS SWEEPS (4 GAME SERIES)")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, champion, runnerup, seriesresult, finalsmvp, avgattendance "
+        "FROM serieshistory WHERE totalgames = 4 ORDER BY year DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Attendance"]
+    widths = [6, 23, 23, 8, 22, 10]
+    printtable(headers, widths, rows)
+
+def championshipleaderboard():
+    printheader("FRANCHISE CHAMPIONSHIP COUNT LEADERBOARD")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT champion, COUNT(*) AS titles, MIN(year) AS firsttitle, MAX(year) AS lasttitle "
+        "FROM serieshistory GROUP BY champion ORDER BY titles DESC, lasttitle DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Franchise Name", "Titles Won", "First Title", "Latest Title"]
+    widths = [28, 12, 14, 14]
+    printtable(headers, widths, rows)
+
+def finalsappearancesleaderboard():
+    printheader("FRANCHISE FINALS APPEARANCES SUMMARY")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT champion, runnerup FROM serieshistory")
+    allrows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    counts = {}
+    wins = {}
+    losses = {}
+    for ch, ru in allrows:
+        counts[ch] = counts.get(ch, 0) + 1
+        wins[ch] = wins.get(ch, 0) + 1
+        losses[ch] = losses.get(ch, 0)
+        counts[ru] = counts.get(ru, 0) + 1
+        wins[ru] = wins.get(ru, 0)
+        losses[ru] = losses.get(ru, 0) + 1
+
+    tabledata = []
+    for team in counts:
+        total = counts[team]
+        w = wins[team]
+        l = losses[team]
+        winpct = round((w / total) * 100, 1)
+        tabledata.append((team, total, w, l, str(winpct) + "%"))
+
+    tabledata.sort(key=lambda item: (item[1], item[2]), reverse=True)
+    headers = ["Franchise Name", "Appearances", "Finals Wins", "Finals Losses", "Win Pct"]
+    widths = [26, 13, 13, 14, 10]
+    printtable(headers, widths, tabledata)
+
+def addseriesrecord():
+    printheader("ADD NEW NBA FINALS SERIES RECORD")
+    year = readint("Enter Finals Year (1950 to 2035): ", 1950, 2035)
+    champion = readtext("Enter Champion Franchise Name: ")
+    runnerup = readtext("Enter Runner Up Franchise Name: ")
+    loserwins = readint("Enter games won by Runner Up (0 to 3): ", 0, 3)
+    seriesresult = "4 to " + str(loserwins)
+    totalgames = 4 + loserwins
+    finalsmvp = readtext("Enter Finals MVP Winner: ")
+    avgattendance = readint("Enter Average Arena Attendance (0 to 30000): ", 0, 30000)
+
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO serieshistory VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (year, champion, runnerup, seriesresult, finalsmvp, totalgames, avgattendance)
+        )
+        conn.commit()
+        print("Successfully recorded Finals series for year", year)
     except Exception as e:
-        print(f"Error fetching series history: {e}")
-        return pd.DataFrame()
+        print("Error inserting series record:", e)
+    cursor.close()
+    conn.close()
 
-
-def fetchallteams():
-    try:
-        conn = getdbconnection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT team_name FROM team_stats ORDER BY team_name ASC")
-        teams = [row[0] for row in cursor.fetchall()]
+def updateseriesrecord():
+    printheader("UPDATE EXISTING NBA FINALS SERIES RECORD")
+    year = readint("Enter Finals Year to update: ", 1950, 2035)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT champion, runnerup, seriesresult, finalsmvp FROM serieshistory WHERE year = %s", (year,))
+    row = cursor.fetchone()
+    if not row:
+        print("No Finals record found for year:", year)
         cursor.close()
         conn.close()
-        return teams if teams else ["2017 Golden State Warriors", "2013 Miami Heat"]
-    except Exception:
-        return ["2017 Golden State Warriors", "2013 Miami Heat"]
+        return
+    print("Current Record:", year, "| Champion:", row[0], "| Runner Up:", row[1], "| MVP:", row[3])
+    champion = readtext("Enter Updated Champion Name: ")
+    runnerup = readtext("Enter Updated Runner Up Name: ")
+    loserwins = readint("Enter games won by Runner Up (0 to 3): ", 0, 3)
+    seriesresult = "4 to " + str(loserwins)
+    totalgames = 4 + loserwins
+    finalsmvp = readtext("Enter Updated Finals MVP Name: ")
+    avgattendance = readint("Enter Updated Average Attendance: ", 0, 30000)
 
+    cursor.execute(
+        "UPDATE serieshistory SET champion = %s, runnerup = %s, seriesresult = %s, "
+        "finalsmvp = %s, totalgames = %s, avgattendance = %s WHERE year = %s",
+        (champion, runnerup, seriesresult, finalsmvp, totalgames, avgattendance, year)
+    )
+    conn.commit()
+    print("Successfully updated series record for year", year)
+    cursor.close()
+    conn.close()
 
-def fetchteamratings(teamname):
-    try:
-        conn = getdbconnection()
-        cursor = conn.cursor(dictionary=True)
-        query = "SELECT off_rating, def_rating FROM team_stats WHERE team_name = %s"
-        cursor.execute(query, (teamname,))
-        row = cursor.fetchone()
+def deleteseriesrecord():
+    printheader("DELETE NBA FINALS SERIES RECORD")
+    year = readint("Enter Finals Year to delete: ", 1950, 2035)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT champion, runnerup FROM serieshistory WHERE year = %s", (year,))
+    row = cursor.fetchone()
+    if not row:
+        print("No Finals record found for year:", year)
         cursor.close()
         conn.close()
-        if row:
-            return float(row["off_rating"]), float(row["def_rating"])
-        return 110.0, 110.0
-    except Exception:
-        return 110.0, 110.0
+        return
+    confirm = readtext("Type YES to delete " + str(year) + " Finals (" + row[0] + " vs " + row[1] + "): ")
+    if confirm.upper() == "YES":
+        cursor.execute("DELETE FROM serieshistory WHERE year = %s", (year,))
+        conn.commit()
+        print("Deleted Finals series for year", year)
+    else:
+        print("Deletion cancelled.")
+    cursor.close()
+    conn.close()
 
+def seriesmenu():
+    while True:
+        printheader("MODULE 2: NBA FINALS SERIES HISTORY ARCHIVE")
+        print("1. View All Finals Series Records")
+        print("2. Filter Finals Series by Year Range")
+        print("3. Search Series by Franchise Name")
+        print("4. View All Game 7 Finals Series")
+        print("5. View All 4 Game Sweep Series")
+        print("6. View Championship Count Leaderboard")
+        print("7. View Total Finals Appearances Leaderboard")
+        print("8. Add New Finals Series Record (INSERT)")
+        print("9. Update Existing Finals Series Record (UPDATE)")
+        print("10. Delete Finals Series Record (DELETE)")
+        print("0. Return to Main Menu")
+        choice = readint("Enter your choice (0 to 10): ", 0, 10)
+        if choice == 1:
+            viewallseries()
+            pausescreen()
+        elif choice == 2:
+            viewseriesbyyearrange()
+            pausescreen()
+        elif choice == 3:
+            searchseriesbyteam()
+            pausescreen()
+        elif choice == 4:
+            viewgame7series()
+            pausescreen()
+        elif choice == 5:
+            viewsweepseries()
+            pausescreen()
+        elif choice == 6:
+            championshipleaderboard()
+            pausescreen()
+        elif choice == 7:
+            finalsappearancesleaderboard()
+            pausescreen()
+        elif choice == 8:
+            addseriesrecord()
+            pausescreen()
+        elif choice == 9:
+            updateseriesrecord()
+            pausescreen()
+        elif choice == 10:
+            deleteseriesrecord()
+            pausescreen()
+        elif choice == 0:
+            break
 
-def runmontecarlosimulation(teama, teamb, simulations):
-    offa, defa = fetchteamratings(teama)
-    offb, defb = fetchteamratings(teamb)
-    
-    neta = offa - defb
-    netb = offb - defa
-    proba = 1 / (1 + 10 ** ((netb - neta) / 400))
-    
+def viewallmvps():
+    printheader("NBA FINALS MVP STATISTICAL ARCHIVE")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, playername, team, ppg, rpg, apg, fgpct "
+        "FROM mvpstats ORDER BY year DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "MVP Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
+    widths = [6, 24, 24, 6, 6, 6, 7]
+    printtable(headers, widths, rows)
+
+def searchmvpbyplayer():
+    printheader("SEARCH FINALS MVP RECORDS BY PLAYER NAME")
+    name = readtext("Enter player name keyword: ")
+    pattern = "%" + name + "%"
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, playername, team, ppg, rpg, apg, fgpct "
+        "FROM mvpstats WHERE playername LIKE %s ORDER BY year ASC",
+        (pattern,)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "MVP Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
+    widths = [6, 24, 24, 6, 6, 6, 7]
+    printtable(headers, widths, rows)
+
+def filtermvpsbyppg():
+    printheader("FILTER FINALS MVPS BY MINIMUM SCORING AVERAGE (PPG)")
+    minppg = readfloat("Enter Minimum PPG (10.0 to 45.0): ", 10.0, 45.0)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, playername, team, ppg, rpg, apg, fgpct "
+        "FROM mvpstats WHERE ppg >= %s ORDER BY ppg DESC",
+        (minppg,)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "MVP Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
+    widths = [6, 24, 24, 6, 6, 6, 7]
+    printtable(headers, widths, rows)
+
+def multiplemvpwinners():
+    printheader("MULTIPLE FINALS MVP AWARD WINNERS")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT playername, COUNT(*) AS awards, ROUND(AVG(ppg), 1) AS avgppg, "
+        "ROUND(AVG(rpg), 1) AS avgrpg, ROUND(AVG(apg), 1) AS avgapg "
+        "FROM mvpstats GROUP BY playername HAVING COUNT(*) > 1 ORDER BY awards DESC, avgppg DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Player Name", "MVP Awards", "Avg PPG", "Avg RPG", "Avg APG"]
+    widths = [26, 12, 10, 10, 10]
+    printtable(headers, widths, rows)
+
+def comparetwomvps():
+    printheader("HEAD TO HEAD FINALS MVP PERFORMANCE COMPARISON")
+    year1 = readint("Enter First Finals Year (1991 to 2035): ", 1950, 2035)
+    year2 = readint("Enter Second Finals Year (1991 to 2035): ", 1950, 2035)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT year, playername, team, ppg, rpg, apg, fgpct FROM mvpstats WHERE year = %s", (year1,))
+    mvp1 = cursor.fetchone()
+    cursor.execute("SELECT year, playername, team, ppg, rpg, apg, fgpct FROM mvpstats WHERE year = %s", (year2,))
+    mvp2 = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not mvp1 or not mvp2:
+        print("One or both Finals years were not found in the MVP table.")
+        return
+
+    headers = ["Metric", str(mvp1[0]) + " " + mvp1[1], str(mvp2[0]) + " " + mvp2[1]]
+    widths = [20, 28, 28]
+    score1 = round(float(mvp1[3]) + (float(mvp1[4]) * 1.2) + (float(mvp1[5]) * 1.5), 2)
+    score2 = round(float(mvp2[3]) + (float(mvp2[4]) * 1.2) + (float(mvp2[5]) * 1.5), 2)
+    rows = [
+        ("Franchise", mvp1[2], mvp2[2]),
+        ("Points Per Game", mvp1[3], mvp2[3]),
+        ("Rebounds Per Game", mvp1[4], mvp2[4]),
+        ("Assists Per Game", mvp1[5], mvp2[5]),
+        ("Field Goal Pct", str(mvp1[6]) + "%", str(mvp2[6]) + "%"),
+        ("Impact Index", score1, score2)
+    ]
+    printtable(headers, widths, rows)
+    if score1 > score2:
+        print("Higher Overall Impact Index:", mvp1[0], mvp1[1])
+    elif score2 > score1:
+        print("Higher Overall Impact Index:", mvp2[0], mvp2[1])
+    else:
+        print("Both MVP performances have an identical Impact Index!")
+
+def addmvprecord():
+    printheader("ADD NEW FINALS MVP RECORD")
+    year = readint("Enter Finals Year (1950 to 2035): ", 1950, 2035)
+    playername = readtext("Enter MVP Player Name: ")
+    team = readtext("Enter Winner Team Name: ")
+    ppg = readfloat("Enter Points Per Game (0.0 to 60.0): ", 0.0, 60.0)
+    rpg = readfloat("Enter Rebounds Per Game (0.0 to 35.0): ", 0.0, 35.0)
+    apg = readfloat("Enter Assists Per Game (0.0 to 25.0): ", 0.0, 25.0)
+    fgpct = readfloat("Enter Field Goal Percentage (10.0 to 90.0): ", 10.0, 90.0)
+
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO mvpstats VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (year, playername, team, ppg, rpg, apg, fgpct)
+        )
+        conn.commit()
+        print("Successfully added Finals MVP record for", year)
+    except Exception as e:
+        print("Error adding MVP record:", e)
+    cursor.close()
+    conn.close()
+
+def updatemvprecord():
+    printheader("UPDATE FINALS MVP STATS")
+    year = readint("Enter Finals Year to update: ", 1950, 2035)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT playername, ppg, rpg, apg, fgpct FROM mvpstats WHERE year = %s", (year,))
+    row = cursor.fetchone()
+    if not row:
+        print("No MVP record found for year:", year)
+        cursor.close()
+        conn.close()
+        return
+    print("Current MVP for", year, "is", row[0], "| PPG:", row[1], "RPG:", row[2], "APG:", row[3])
+    playername = readtext("Enter Updated Player Name: ")
+    ppg = readfloat("Enter Updated PPG: ", 0.0, 60.0)
+    rpg = readfloat("Enter Updated RPG: ", 0.0, 35.0)
+    apg = readfloat("Enter Updated APG: ", 0.0, 25.0)
+    fgpct = readfloat("Enter Updated FG Percentage: ", 10.0, 90.0)
+    cursor.execute(
+        "UPDATE mvpstats SET playername = %s, ppg = %s, rpg = %s, apg = %s, fgpct = %s WHERE year = %s",
+        (playername, ppg, rpg, apg, fgpct, year)
+    )
+    conn.commit()
+    print("Successfully updated MVP record for year", year)
+    cursor.close()
+    conn.close()
+
+def deletemvprecord():
+    printheader("DELETE FINALS MVP RECORD")
+    year = readint("Enter Finals Year to delete from MVP table: ", 1950, 2035)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT playername FROM mvpstats WHERE year = %s", (year,))
+    row = cursor.fetchone()
+    if not row:
+        print("No MVP record found for year:", year)
+        cursor.close()
+        conn.close()
+        return
+    confirm = readtext("Type YES to delete MVP record for " + str(year) + " (" + row[0] + "): ")
+    if confirm.upper() == "YES":
+        cursor.execute("DELETE FROM mvpstats WHERE year = %s", (year,))
+        conn.commit()
+        print("Deleted MVP record for year", year)
+    else:
+        print("Deletion cancelled.")
+    cursor.close()
+    conn.close()
+
+def mvpmenu():
+    while True:
+        printheader("MODULE 3: FINALS MVP STATISTICAL DATABASE")
+        print("1. View All Finals MVP Records")
+        print("2. Search MVP Records by Player Name")
+        print("3. Filter MVPs by Minimum PPG")
+        print("4. View Multiple Finals MVP Winners")
+        print("5. Compare Two Finals MVP Performances")
+        print("6. Add New Finals MVP Record (INSERT)")
+        print("7. Update Finals MVP Statistics (UPDATE)")
+        print("8. Delete Finals MVP Record (DELETE)")
+        print("0. Return to Main Menu")
+        choice = readint("Enter your choice (0 to 8): ", 0, 8)
+        if choice == 1:
+            viewallmvps()
+            pausescreen()
+        elif choice == 2:
+            searchmvpbyplayer()
+            pausescreen()
+        elif choice == 3:
+            filtermvpsbyppg()
+            pausescreen()
+        elif choice == 4:
+            multiplemvpwinners()
+            pausescreen()
+        elif choice == 5:
+            comparetwomvps()
+            pausescreen()
+        elif choice == 6:
+            addmvprecord()
+            pausescreen()
+        elif choice == 7:
+            updatemvprecord()
+            pausescreen()
+        elif choice == 8:
+            deletemvprecord()
+            pausescreen()
+        elif choice == 0:
+            break
+
+def viewallarenas():
+    printheader("NBA FINALS ARENA DIRECTORY")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT arenaid, arenaname, city, franchise, capacity, openedyear "
+        "FROM arenainfo ORDER BY capacity DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Arena Name", "City", "Home Franchise", "Capacity", "Opened"]
+    widths = [4, 26, 15, 22, 9, 6]
+    printtable(headers, widths, rows)
+
+def searcharenabycity():
+    printheader("SEARCH ARENA BY CITY OR FRANCHISE")
+    keyword = readtext("Enter city or franchise name: ")
+    pattern = "%" + keyword + "%"
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT arenaid, arenaname, city, franchise, capacity, openedyear "
+        "FROM arenainfo WHERE city LIKE %s OR franchise LIKE %s OR arenaname LIKE %s",
+        (pattern, pattern, pattern)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Arena Name", "City", "Home Franchise", "Capacity", "Opened"]
+    widths = [4, 26, 15, 22, 9, 6]
+    printtable(headers, widths, rows)
+
+def filterarenasbycapacity():
+    printheader("FILTER ARENAS BY MINIMUM SEATING CAPACITY")
+    mincap = readint("Enter Minimum Seating Capacity (15000 to 25000): ", 15000, 25000)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT arenaid, arenaname, city, franchise, capacity, openedyear "
+        "FROM arenainfo WHERE capacity >= %s ORDER BY capacity DESC",
+        (mincap,)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Arena Name", "City", "Home Franchise", "Capacity", "Opened"]
+    widths = [4, 26, 15, 22, 9, 6]
+    printtable(headers, widths, rows)
+
+def oldestarenasreport():
+    printheader("ARENAS ORDERED BY OPENING YEAR (OLDEST FIRST)")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT arenaid, arenaname, city, franchise, openedyear, (2026 - openedyear) AS age, capacity "
+        "FROM arenainfo ORDER BY openedyear ASC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Arena Name", "City", "Franchise", "Opened", "Years Old", "Capacity"]
+    widths = [4, 25, 14, 22, 6, 9, 8]
+    printtable(headers, widths, rows)
+
+def addarenarecord():
+    printheader("ADD NEW NBA ARENA TO DIRECTORY")
+    arenaname = readtext("Enter Arena Name: ")
+    city = readtext("Enter City Name: ")
+    franchise = readtext("Enter Home Franchise Name: ")
+    capacity = readint("Enter Seating Capacity (10000 to 35000): ", 10000, 35000)
+    openedyear = readint("Enter Year Opened (1950 to 2035): ", 1950, 2035)
+
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COALESCE(MAX(arenaid), 0) + 1 FROM arenainfo")
+    newid = cursor.fetchone()[0]
+    try:
+        cursor.execute(
+            "INSERT INTO arenainfo VALUES (%s, %s, %s, %s, %s, %s)",
+            (newid, arenaname, city, franchise, capacity, openedyear)
+        )
+        conn.commit()
+        print("Successfully added arena:", arenaname, "with ID:", newid)
+    except Exception as e:
+        print("Error adding arena:", e)
+    cursor.close()
+    conn.close()
+
+def updatearenacapacity():
+    printheader("UPDATE ARENA NAME OR SEATING CAPACITY")
+    arenaid = readint("Enter Arena ID to update: ", 1, 9999)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT arenaname, capacity FROM arenainfo WHERE arenaid = %s", (arenaid,))
+    row = cursor.fetchone()
+    if not row:
+        print("No arena found with ID:", arenaid)
+        cursor.close()
+        conn.close()
+        return
+    print("Selected Arena:", row[0], "| Current Capacity:", row[1])
+    newname = readtext("Enter Updated Arena Name: ")
+    newcap = readint("Enter Updated Seating Capacity (10000 to 35000): ", 10000, 35000)
+    cursor.execute(
+        "UPDATE arenainfo SET arenaname = %s, capacity = %s WHERE arenaid = %s",
+        (newname, newcap, arenaid)
+    )
+    conn.commit()
+    print("Successfully updated arena ID", arenaid)
+    cursor.close()
+    conn.close()
+
+def deletearenarecord():
+    printheader("DELETE ARENA FROM DIRECTORY")
+    arenaid = readint("Enter Arena ID to delete: ", 1, 9999)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT arenaname FROM arenainfo WHERE arenaid = %s", (arenaid,))
+    row = cursor.fetchone()
+    if not row:
+        print("No arena found with ID:", arenaid)
+        cursor.close()
+        conn.close()
+        return
+    confirm = readtext("Type YES to delete arena " + row[0] + ": ")
+    if confirm.upper() == "YES":
+        cursor.execute("DELETE FROM arenainfo WHERE arenaid = %s", (arenaid,))
+        conn.commit()
+        print("Deleted arena:", row[0])
+    else:
+        print("Deletion cancelled.")
+    cursor.close()
+    conn.close()
+
+def arenamenu():
+    while True:
+        printheader("MODULE 4: NBA ARENA DIRECTORY & STADIUM DATABASE")
+        print("1. View All Arenas by Capacity")
+        print("2. Search Arena by City or Franchise")
+        print("3. Filter Arenas by Minimum Capacity")
+        print("4. View Oldest NBA Arenas Report")
+        print("5. Add New Arena Record (INSERT)")
+        print("6. Update Arena Name or Capacity (UPDATE)")
+        print("7. Delete Arena Record (DELETE)")
+        print("0. Return to Main Menu")
+        choice = readint("Enter your choice (0 to 7): ", 0, 7)
+        if choice == 1:
+            viewallarenas()
+            pausescreen()
+        elif choice == 2:
+            searcharenabycity()
+            pausescreen()
+        elif choice == 3:
+            filterarenasbycapacity()
+            pausescreen()
+        elif choice == 4:
+            oldestarenasreport()
+            pausescreen()
+        elif choice == 5:
+            addarenarecord()
+            pausescreen()
+        elif choice == 6:
+            updatearenacapacity()
+            pausescreen()
+        elif choice == 7:
+            deletearenarecord()
+            pausescreen()
+        elif choice == 0:
+            break
+
+def getteambyid(teamid):
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamid, teamname, offrating, defrating, pace, coach "
+        "FROM teamstats WHERE teamid = %s",
+        (teamid,)
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return row
+
+def savetosimlogs(teama, teamb, winner, games, margin):
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COALESCE(MAX(simid), 0) + 1 FROM simlogs")
+    newid = cursor.fetchone()[0]
+    now = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    cursor.execute(
+        "INSERT INTO simlogs VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        (newid, now, teama, teamb, winner, int(games), float(margin))
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def runratingsimulation():
+    printheader("CROSS ERA EFFICIENCY MATCHUP PREDICTOR")
+    viewallteams()
+    print()
+    ida = readint("Enter Team ID for Team A: ", 1, 9999)
+    idb = readint("Enter Team ID for Team B: ", 1, 9999)
+    teama = getteambyid(ida)
+    teamb = getteambyid(idb)
+
+    if not teama or not teamb:
+        print("One or both Team IDs do not exist in the database.")
+        return
+
+    namea = teama[1]
+    offa = float(teama[2])
+    defa = float(teama[3])
+    pacea = float(teama[4])
+    coacha = teama[5]
+
+    nameb = teamb[1]
+    offb = float(teamb[2])
+    defb = float(teamb[3])
+    paceb = float(teamb[4])
+    coachb = teamb[5]
+
+    expectedpace = round((pacea + paceb) / 2.0, 2)
+    scorea = round(((offa + defb) / 2.0) * (expectedpace / 100.0), 1)
+    scoreb = round(((offb + defa) / 2.0) * (expectedpace / 100.0), 1)
+    neta = round(offa - defa, 2)
+    netb = round(offb - defb, 2)
+    diff = round( abs(scorea - scoreb), 2)
+
+    if scorea > scoreb:
+        winner = namea
+    elif scoreb > scorea:
+        winner = nameb
+    else:
+        winner = namea if neta >= netb else nameb
+
+    if diff >= 6.0:
+        predictedgames = 4
+    elif diff >= 3.5:
+        predictedgames = 5
+    elif diff >= 1.5:
+        predictedgames = 6
+    else:
+        predictedgames = 7
+
+    headers = ["Metric", namea, nameb]
+    widths = [24, 26, 26]
+    rows = [
+        ("Head Coach", coacha, coachb),
+        ("Offensive Rating", offa, offb),
+        ("Defensive Rating", defa, defb),
+        ("Net Efficiency Rating", neta, netb),
+        ("Season Pace", pacea, paceb),
+        ("Projected Game Score", scorea, scoreb)
+    ]
+    printtable(headers, widths, rows)
+    print("Projected Series Winner:", winner)
+    print("Projected Series Length:", predictedgames, "Games")
+    print("Projected Average Scoring Margin:", diff, "Points")
+    savetosimlogs(namea, nameb, winner, predictedgames, diff)
+    print("Matchup prediction saved to Simulation Logs table.")
+
+def runbestof7playbyplay():
+    printheader("GAME BY GAME 7 SERIES SIMULATOR")
+    ida = readint("Enter Team ID for Team A (Need ID list? View Module 1): ", 1, 9999)
+    idb = readint("Enter Team ID for Team B: ", 1, 9999)
+    teama = getteambyid(ida)
+    teamb = getteambyid(idb)
+
+    if not teama or not teamb:
+        print("One or both Team IDs were not found.")
+        return
+
+    namea = teama[1]
+    offa = float(teama[2])
+    defa = float(teama[3])
+    pacea = float(teama[4])
+
+    nameb = teamb[1]
+    offb = float(teamb[2])
+    defb = float(teamb[3])
+    paceb = float(teamb[4])
+
+    avgpace = (pacea + paceb) / 2.0
+    basea = ((offa + defb) / 2.0) * (avgpace / 100.0)
+    baseb = ((offb + defa) / 2.0) * (avgpace / 100.0)
+
     winsa = 0
     winsb = 0
-    sims = int(simulations)
-    
-    for _ in range(sims):
-        seriesa = 0
-        seriesb = 0
-        while seriesa < 4 and seriesb < 4:
-            if random.random() < proba:
-                seriesa += 1
-            else:
-                seriesb += 1
-        if seriesa == 4:
-            winsa += 1
+    gamenum = 1
+    totalmargin = 0.0
+    gamerows = []
+
+    while winsa < 4 and winsb < 4:
+        swinga = random.uniform(-8.0, 8.0)
+        swingb = random.uniform(-8.0, 8.0)
+        pts1 = int(round(basea + swinga))
+        pts2 = int(round(baseb + swingb))
+        if pts1 == pts2:
+            pts1 = pts1 + random.choice([2, 3])
+        if pts1 > pts2:
+            winsa = winsa + 1
+            gamewinner = namea
         else:
-            winsb += 1
-            
-    pcta = (winsa / sims) * 100
-    pctb = (winsb / sims) * 100
-    
-    log_simulation(teama, teamb, sims, round(pcta, 2), round(pctb, 2))
-    
-    summary = f"{teama} (Off: {offa}, Def: {defa}) vs {teamb} (Off: {offb}, Def: {defb})"
-    return summary, f"{pcta:.2f}%", f"{pctb:.2f}%"
+            winsb = winsb + 1
+            gamewinner = nameb
+        totalmargin = totalmargin + abs(pts1 - pts2)
+        standing = str(winsa) + " to " + str(winsb)
+        gamerows.append(("Game " + str(gamenum), pts1, pts2, gamewinner, standing))
+        gamenum = gamenum + 1
 
+    headers = ["Game", namea + " Pts", nameb + " Pts", "Game Winner", "Series Standing"]
+    widths = [8, 22, 22, 26, 15]
+    printtable(headers, widths, gamerows)
 
-def generate_ratings_scatter():
-    try:
-        conn = getdbconnection()
-        query = """
-            SELECT 
-                t.team_name, 
-                t.off_rating, 
-                t.def_rating, 
-                ROUND(t.off_rating - t.def_rating, 2) AS net_rating,
-                CASE 
-                    WHEN s.champion IS NOT NULL THEN 'Champion'
-                    ELSE 'Runner-Up'
-                END AS status
-            FROM team_stats t
-            LEFT JOIN series_history s 
-                ON t.team_name = CONCAT(s.year, ' ', s.champion)
-        """
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(query)
-        rows = cursor.fetchall()
+    totalgames = winsa + winsb
+    avgmargin = round(totalmargin / totalgames, 2)
+    champion = namea if winsa == 4 else nameb
+    print("Simulated Series Champion:", champion, "in", totalgames, "games!")
+    savetosimlogs(namea, nameb, champion, totalgames, avgmargin)
+    print("Series result logged to MySQL database.")
+
+def viewsimlogs():
+    printheader("SAVED MATCHUP SIMULATION LOGS")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT simid, simdate, teama, teamb, winner, predictedgames, margin "
+        "FROM simlogs ORDER BY simid DESC LIMIT 50"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Timestamp", "Team A", "Team B", "Winner", "Games", "Margin"]
+    widths = [4, 19, 23, 23, 23, 5, 6]
+    printtable(headers, widths, rows)
+
+def searchsimlogsbyteam():
+    printheader("SEARCH SIMULATION LOGS BY TEAM")
+    keyword = readtext("Enter Team Name keyword: ")
+    pattern = "%" + keyword + "%"
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT simid, simdate, teama, teamb, winner, predictedgames, margin "
+        "FROM simlogs WHERE teama LIKE %s OR teamb LIKE %s ORDER BY simid DESC",
+        (pattern, pattern)
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["ID", "Timestamp", "Team A", "Team B", "Winner", "Games", "Margin"]
+    widths = [4, 19, 23, 23, 23, 5, 6]
+    printtable(headers, widths, rows)
+
+def deletesimlogbyid():
+    printheader("DELETE SINGLE SIMULATION LOG")
+    simid = readint("Enter Simulation Log ID to delete: ", 1, 99999)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT teama, teamb FROM simlogs WHERE simid = %s", (simid,))
+    row = cursor.fetchone()
+    if not row:
+        print("No simulation log found with ID:", simid)
         cursor.close()
         conn.close()
+        return
+    cursor.execute("DELETE FROM simlogs WHERE simid = %s", (simid,))
+    conn.commit()
+    print("Deleted simulation log ID", simid, ":", row[0], "vs", row[1])
+    cursor.close()
+    conn.close()
 
-        df = pd.DataFrame(rows)
-        if df.empty:
-            return go.Figure()
-
-        df["off_rating"] = df["off_rating"].astype(float)
-        df["def_rating"] = df["def_rating"].astype(float)
-        df["net_rating"] = df["net_rating"].astype(float)
-
-        fig = px.scatter(
-            df,
-            x="def_rating",
-            y="off_rating",
-            color="status",
-            hover_name="team_name",
-            hover_data={"net_rating": True, "off_rating": True, "def_rating": True, "status": False},
-            title="Offensive Rating vs. Defensive Rating (2001–2026)",
-            labels={
-                "def_rating": "Defensive Rating (Lower is Better)",
-                "off_rating": "Offensive Rating (Higher is Better)",
-                "status": "Finals Outcome"
-            },
-            color_discrete_map={"Champion": "#FFD700", "Runner-Up": "#94A3B8"}
-        )
-        fig.update_xaxes(autorange="reversed")
-        fig.update_layout(
-            template="plotly_dark",
-            height=500,
-            font=dict(family="Arial, sans-serif", size=12)
-        )
-        return fig
-    except Exception as e:
-        print(f"Error building scatter chart: {e}")
-        return go.Figure()
-
-
-def generate_era_trend():
-    try:
+def clearallsimlogs():
+    printheader("CLEAR ALL SIMULATION LOGS")
+    confirm = readtext("Type YES to clear all records from simlogs table: ")
+    if confirm.upper() == "YES":
         conn = getdbconnection()
-        query = """
-            SELECT 
-                CAST(LEFT(team_name, 4) AS UNSIGNED) AS year,
-                ROUND(AVG(off_rating), 2) AS avg_off_rating,
-                ROUND(AVG(def_rating), 2) AS avg_def_rating
-            FROM team_stats
-            GROUP BY year
-            ORDER BY year ASC
-        """
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        cursor = conn.cursor()
+        cursor.execute("TRUNCATE TABLE simlogs")
+        conn.commit()
         cursor.close()
         conn.close()
+        print("All simulation logs have been cleared.")
+    else:
+        print("Operation cancelled.")
 
-        df = pd.DataFrame(rows)
-        if df.empty:
-            return go.Figure()
+def simulatormenu():
+    while True:
+        printheader("MODULE 5: NBA FINALS MATCHUP SIMULATOR & LOGS")
+        print("1. Run Deterministic Efficiency Matchup Predictor")
+        print("2. Run Best of 7 Game by Game Series Simulator")
+        print("3. View Saved Simulation Logs")
+        print("4. Search Simulation Logs by Team")
+        print("5. Delete Single Simulation Log by ID (DELETE)")
+        print("6. Clear All Simulation Logs (TRUNCATE)")
+        print("0. Return to Main Menu")
+        choice = readint("Enter your choice (0 to 6): ", 0, 6)
+        if choice == 1:
+            runratingsimulation()
+            pausescreen()
+        elif choice == 2:
+            runbestof7playbyplay()
+            pausescreen()
+        elif choice == 3:
+            viewsimlogs()
+            pausescreen()
+        elif choice == 4:
+            searchsimlogsbyteam()
+            pausescreen()
+        elif choice == 5:
+            deletesimlogbyid()
+            pausescreen()
+        elif choice == 6:
+            clearallsimlogs()
+            pausescreen()
+        elif choice == 0:
+            break
 
-        df["year"] = df["year"].astype(int)
-        df["avg_off_rating"] = df["avg_off_rating"].astype(float)
-        df["avg_def_rating"] = df["avg_def_rating"].astype(float)
+def joinedchampionreport():
+    printheader("SQL JOIN REPORT: CHAMPIONS, TEAM EFFICIENCY & MVP STATS")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT s.year, s.champion, t.offrating, t.defrating, "
+        "ROUND(t.offrating - t.defrating, 2) AS netrtg, m.playername, m.ppg, t.coach "
+        "FROM serieshistory s "
+        "INNER JOIN mvpstats m ON s.year = m.year "
+        "INNER JOIN teamstats t ON t.teamname = CONCAT(s.year, ' ', s.champion) "
+        "ORDER BY s.year DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Year", "Champion", "OffRtg", "DefRtg", "NetRtg", "Finals MVP", "MVP PPG", "Coach"]
+    widths = [5, 22, 6, 6, 6, 20, 7, 16]
+    printtable(headers, widths, rows)
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=df["year"], y=df["avg_off_rating"],
-            mode="lines+markers", name="Avg Offensive Rating",
-            line=dict(color="#10B981", width=3)
-        ))
-        fig.add_trace(go.Scatter(
-            x=df["year"], y=df["avg_def_rating"],
-            mode="lines+markers", name="Avg Defensive Rating",
-            line=dict(color="#EF4444", width=3)
-        ))
-
-        fig.update_layout(
-            title="NBA Finals Efficiency Rating Trends Across Eras (2001–2026)",
-            xaxis_title="Year",
-            yaxis_title="Rating Value",
-            template="plotly_dark",
-            height=500,
-            hovermode="x unified"
+def decadesummaryreport():
+    printheader("ERA & DECADE EFFICIENCY AGGREGATION REPORT")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    decades = [
+        ("1990s (1991 to 1999)", 1991, 1999),
+        ("2000s (2000 to 2009)", 2000, 2009),
+        ("2010s (2010 to 2019)", 2010, 2019),
+        ("2020s (2020 to 2026)", 2020, 2026)
+    ]
+    reportrows = []
+    for label, starty, endy in decades:
+        cursor.execute(
+            "SELECT COUNT(*), ROUND(AVG(offrating), 2), ROUND(AVG(defrating), 2), ROUND(AVG(pace), 2) "
+            "FROM teamstats WHERE seasonyear BETWEEN %s AND %s",
+            (starty, endy)
         )
-        return fig
-    except Exception as e:
-        print(f"Error building trend chart: {e}")
-        return go.Figure()
+        trow = cursor.fetchone()
+        cursor.execute(
+            "SELECT ROUND(AVG(totalgames), 2), ROUND(AVG(avgattendance), 0) "
+            "FROM serieshistory WHERE year BETWEEN %s AND %s",
+            (starty, endy)
+        )
+        srow = cursor.fetchone()
+        reportrows.append((
+            label,
+            trow[0],
+            trow[1],
+            trow[2],
+            trow[3],
+            srow[0],
+            int(srow[1]) if srow[1] else 0
+        ))
+    cursor.close()
+    conn.close()
+    headers = ["Decade Era", "Teams", "Avg OffRtg", "Avg DefRtg", "Avg Pace", "Avg Games", "Avg Attend"]
+    widths = [21, 6, 10, 10, 9, 9, 10]
+    printtable(headers, widths, reportrows)
 
+def drawratingchart():
+    printheader("TEXT BAR CHART: TOP 12 TEAMS BY NET RATING")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamname, ROUND(offrating - defrating, 2) AS netrtg "
+        "FROM teamstats ORDER BY netrtg DESC LIMIT 12"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    for teamname, netrtg in rows:
+        barsize = int(float(netrtg) * 3)
+        bar = "#" * max(1, barsize)
+        print(formatcell(teamname, 28) + " | " + bar + " (" + str(netrtg) + ")")
 
-teamoptions = fetchallteams()
+def drawtitlechart():
+    printheader("TEXT BAR CHART: CHAMPIONSHIPS BY FRANCHISE")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT champion, COUNT(*) AS titles "
+        "FROM serieshistory GROUP BY champion ORDER BY titles DESC"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    for team, titles in rows:
+        bar = "#" * (int(titles) * 5)
+        print(formatcell(team, 25) + " | " + bar + " (" + str(titles) + ")")
 
-with gr.Blocks(title="HoopsData - NBA Analytics Platform", analytics_enabled=False) as mainapp:
-    gr.Markdown("# 🏀 HoopsData - NBA Finals Analytics & Simulation Engine")
+def drawmvpscoringchart():
+    printheader("TEXT BAR CHART: TOP 12 FINALS MVP SCORING AVERAGES")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT year, playername, ppg FROM mvpstats ORDER BY ppg DESC LIMIT 12"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    for year, player, ppg in rows:
+        label = str(year) + " " + player
+        barsize = int(float(ppg))
+        bar = "#" * barsize
+        print(formatcell(label, 28) + " | " + bar + " (" + str(ppg) + " PPG)")
 
-    with gr.Tabs():
-        with gr.TabItem("Series History"):
-            gr.Markdown("### Historical NBA Finals Records (2001–2026)")
-            with gr.Row():
-                start_input = gr.Number(label="Start Year", value=2001, precision=0)
-                end_input = gr.Number(label="End Year", value=2026, precision=0)
-            fetch_btn = gr.Button("Query History", variant="primary")
-            history_df = gr.Dataframe(value=fetchserieshistory(2001, 2026), label="Finals Records")
-            
-            fetch_btn.click(
-                fn=fetchserieshistory,
-                inputs=[start_input, end_input],
-                outputs=history_df,
-                api_name=False
-            )
+def coachleaderboard():
+    printheader("CHAMPIONSHIP COACH APPEARANCES IN FINALS")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT coach, COUNT(*) AS appearances, ROUND(AVG(offrating), 2) AS avgoff, "
+        "ROUND(AVG(defrating), 2) AS avgdef "
+        "FROM teamstats GROUP BY coach ORDER BY appearances DESC, avgoff DESC LIMIT 15"
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    headers = ["Head Coach", "Finals Teams Coached", "Avg OffRtg", "Avg DefRtg"]
+    widths = [24, 22, 12, 12]
+    printtable(headers, widths, rows)
 
-        with gr.TabItem("Matchup Simulator"):
-            gr.Markdown("### Monte Carlo Series Simulation Engine")
-            with gr.Row():
-                team_a_dropdown = gr.Dropdown(choices=teamoptions, label="Select Team A", value=teamoptions[0])
-                team_b_dropdown = gr.Dropdown(choices=teamoptions, label="Select Team B", value=teamoptions[1] if len(teamoptions) > 1 else teamoptions[0])
-            
-            sim_slider = gr.Slider(minimum=1000, maximum=50000, step=1000, value=10000, label="Simulation Iterations")
-            sim_btn = gr.Button("Run Simulation", variant="primary")
+def databasestatssummary():
+    printheader("COMPLETE MYSQL DATABASE RECORD SUMMARY")
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    tables = [
+        ("teamstats", "Finals Team Efficiency Records"),
+        ("serieshistory", "Historical Finals Series Records"),
+        ("mvpstats", "Finals MVP Award Statistics"),
+        ("arenainfo", "NBA Stadium & Arena Directory"),
+        ("simlogs", "User Matchup Simulation Logs")
+    ]
+    summaryrows = []
+    for tname, desc in tables:
+        cursor.execute("SELECT COUNT(*) FROM " + tname)
+        cnt = cursor.fetchone()[0]
+        summaryrows.append((tname, desc, cnt))
+    cursor.close()
+    conn.close()
+    headers = ["MySQL Table Name", "Table Description", "Row Count"]
+    widths = [20, 36, 12]
+    printtable(headers, widths, summaryrows)
 
-            with gr.Row():
-                rating_breakdown = gr.Textbox(label="Ratings Breakdown")
-                team_a_win_out = gr.Textbox(label="Team A Win Chance")
-                team_b_win_out = gr.Textbox(label="Team B Win Chance")
+def resetdefaultdata():
+    printheader("RESET ALL TABLES TO DEFAULT HISTORICAL DATA")
+    confirm = readtext("Type RESET to drop and recreate all default records: ")
+    if confirm.upper() == "RESET":
+        conn = getdbconnection()
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS teamstats")
+        cursor.execute("DROP TABLE IF EXISTS serieshistory")
+        cursor.execute("DROP TABLE IF EXISTS mvpstats")
+        cursor.execute("DROP TABLE IF EXISTS arenainfo")
+        cursor.execute("DROP TABLE IF EXISTS simlogs")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        initdatabase()
+        print("Database has been restored to default historical records.")
+    else:
+        print("Reset cancelled.")
 
-            sim_btn.click(
-                fn=runmontecarlosimulation,
-                inputs=[team_a_dropdown, team_b_dropdown, sim_slider],
-                outputs=[rating_breakdown, team_a_win_out, team_b_win_out],
-                api_name=False
-            )
+def analyticsmenu():
+    while True:
+        printheader("MODULE 6: SQL ANALYTICS, JOINS & ASCII CHARTS")
+        print("1. View SQL INNER JOIN Report (Champions + Ratings + MVPs)")
+        print("2. View Decade by Decade Efficiency Aggregation Report")
+        print("3. View Head Coach Finals Appearances Leaderboard")
+        print("4. View ASCII Bar Chart: Top 12 Teams by Net Rating")
+        print("5. View ASCII Bar Chart: Championships Won by Franchise")
+        print("6. View ASCII Bar Chart: Top 12 Finals MVP Scoring Averages")
+        print("7. View MySQL Database Table Row Count Summary")
+        print("8. Reset Database to Default Seed Records")
+        print("0. Return to Main Menu")
+        choice = readint("Enter your choice (0 to 8): ", 0, 8)
+        if choice == 1:
+            joinedchampionreport()
+            pausescreen()
+        elif choice == 2:
+            decadesummaryreport()
+            pausescreen()
+        elif choice == 3:
+            coachleaderboard()
+            pausescreen()
+        elif choice == 4:
+            drawratingchart()
+            pausescreen()
+        elif choice == 5:
+            drawtitlechart()
+            pausescreen()
+        elif choice == 6:
+            drawmvpscoringchart()
+            pausescreen()
+        elif choice == 7:
+            databasestatssummary()
+            pausescreen()
+        elif choice == 8:
+            resetdefaultdata()
+            pausescreen()
+        elif choice == 0:
+            break
 
-        with gr.TabItem("Visual Analytics"):
-            gr.Markdown("### Interactive Efficiency Data Visualizations")
-            refresh_charts_btn = gr.Button("Refresh Charts")
-            
-            with gr.Row():
-                scatter_plot = gr.Plot(value=generate_ratings_scatter(), label="Offensive vs Defensive Efficiency")
-            with gr.Row():
-                trend_plot = gr.Plot(value=generate_era_trend(), label="Era Efficiency Trends")
+def mainmenu():
+    initdatabase()
+    while True:
+        printheader("HOOPSDATA: NBA FINALS ARCHIVE & ANALYTICS SYSTEM (CBSE CLASS 12)")
+        print("1. Module 1: Team Efficiency Stats Management (CRUD & Filters)")
+        print("2. Module 2: Finals Series History Archive (CRUD & Leaderboards)")
+        print("3. Module 3: Finals MVP Statistical Database (CRUD & Comparisons)")
+        print("4. Module 4: NBA Arena & Stadium Directory (CRUD & Capacity)")
+        print("5. Module 5: Matchup Simulator & Play by Play Engine")
+        print("6. Module 6: SQL Analytics, Joins & Text Bar Charts")
+        print("0. Exit Application")
+        printline(78)
+        choice = readint("Select a module (0 to 6): ", 0, 6)
+        if choice == 1:
+            teammenu()
+        elif choice == 2:
+            seriesmenu()
+        elif choice == 3:
+            mvpmenu()
+        elif choice == 4:
+            arenamenu()
+        elif choice == 5:
+            simulatormenu()
+        elif choice == 6:
+            analyticsmenu()
+        elif choice == 0:
+            print()
+            print("Thank you for using HoopsData NBA Finals Archive. Goodbye!")
+            break
 
-            refresh_charts_btn.click(
-                fn=lambda: (generate_ratings_scatter(), generate_era_trend()),
-                outputs=[scatter_plot, trend_plot],
-                api_name=False
-            )
-
-        with gr.TabItem("Simulation History Logs"):
-            gr.Markdown("### Database Simulation Run Logs")
-            with gr.Row():
-                refresh_logs_btn = gr.Button("Refresh Logs", variant="primary")
-                clear_logs_btn = gr.Button("Clear All Logs", variant="stop")
-            
-            status_box = gr.Textbox(label="System Status", value="Ready")
-            logs_df = gr.Dataframe(value=fetch_simulation_logs(), label="Recent Simulations (Stored in MySQL)")
-
-            refresh_logs_btn.click(
-                fn=fetch_simulation_logs,
-                outputs=logs_df,
-                api_name=False
-            )
-            clear_logs_btn.click(
-                fn=clear_simulation_logs,
-                outputs=[logs_df, status_box],
-                api_name=False
-            )
-
-if __name__ == "__main__":
-    mainapp.launch(inbrowser=True, show_api=False)
+mainmenu()
