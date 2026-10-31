@@ -10,7 +10,7 @@ from datetime import datetime
 DB_HOST = "localhost"
 DB_PORT = 3306
 DB_USER = "root"
-DB_PASSWORD = "YOUR_PASSWORD"
+DB_PASSWORD = "Ajoshjohn2021"
 DB_NAME = "nba_finals_db"
 
 def initdatabase():
