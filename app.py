@@ -6,15 +6,14 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-# Database Connection Parameters
 DB_HOST = "localhost"
 DB_PORT = 3306
 DB_USER = "root"
 DB_PASSWORD = "Ajoshjohn2021"
 DB_NAME = "nba_finals_db"
 
+
 def initdatabase():
-    """Initializes the database, creates tables, and seeds default records."""
     try:
         conn = mysql.connector.connect(
             host=DB_HOST,
@@ -36,7 +35,6 @@ def initdatabase():
         )
         cursor = conn.cursor()
 
-        # 1. Create team_stats table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS team_stats (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -46,7 +44,6 @@ def initdatabase():
             )
         """)
 
-        # 2. Create series_history table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS series_history (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -59,7 +56,6 @@ def initdatabase():
             )
         """)
 
-        # 3. Create simulation_logs table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS simulation_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -72,7 +68,6 @@ def initdatabase():
             )
         """)
 
-        # Seed team_stats if empty
         cursor.execute("SELECT COUNT(*) FROM team_stats")
         if cursor.fetchone()[0] == 0:
             team_data = [
@@ -103,9 +98,11 @@ def initdatabase():
                 ('2025 Oklahoma City Thunder', 118.5, 108.2), ('2025 Indiana Pacers', 119.8, 115.1),
                 ('2026 Boston Celtics', 121.5, 110.1), ('2026 Oklahoma City Thunder', 119.2, 108.7)
             ]
-            cursor.executemany("INSERT INTO team_stats (team_name, off_rating, def_rating) VALUES (%s, %s, %s)", team_data)
+            cursor.executemany(
+                "INSERT INTO team_stats (team_name, off_rating, def_rating) VALUES (%s, %s, %s)",
+                team_data
+            )
 
-        # Seed series_history if empty
         cursor.execute("SELECT COUNT(*) FROM series_history")
         if cursor.fetchone()[0] == 0:
             history_data = [
@@ -136,7 +133,10 @@ def initdatabase():
                 (2025, 'Oklahoma City Thunder', 'Indiana Pacers', '4-3', 'Shai Gilgeous-Alexander', 7),
                 (2026, 'Boston Celtics', 'Oklahoma City Thunder', '4-2', 'Jayson Tatum', 6)
             ]
-            cursor.executemany("INSERT INTO series_history (year, champion, runner_up, score, finals_mvp, total_games) VALUES (%s, %s, %s, %s, %s, %s)", history_data)
+            cursor.executemany(
+                "INSERT INTO series_history (year, champion, runner_up, score, finals_mvp, total_games) VALUES (%s, %s, %s, %s, %s, %s)",
+                history_data
+            )
 
         conn.commit()
         cursor.close()
@@ -144,7 +144,9 @@ def initdatabase():
     except Exception as e:
         print(f"Database Initialization Notice: {e}")
 
+
 initdatabase()
+
 
 def getdbconnection():
     return mysql.connector.connect(
@@ -155,10 +157,8 @@ def getdbconnection():
         database=DB_NAME
     )
 
-# --- Simulation Logging Functions ---
 
 def log_simulation(team_a, team_b, iterations, pct_a, pct_b):
-    """Inserts a record of a completed simulation into simulation_logs."""
     try:
         conn = getdbconnection()
         cursor = conn.cursor()
@@ -175,8 +175,8 @@ def log_simulation(team_a, team_b, iterations, pct_a, pct_b):
     except Exception as e:
         print(f"Failed to log simulation to database: {e}")
 
+
 def fetch_simulation_logs():
-    """Retrieves the last 50 simulation logs."""
     try:
         conn = getdbconnection()
         cursor = conn.cursor(dictionary=True)
@@ -200,8 +200,8 @@ def fetch_simulation_logs():
     except Exception:
         return pd.DataFrame()
 
+
 def clear_simulation_logs():
-    """Truncates the simulation_logs table."""
     try:
         conn = getdbconnection()
         cursor = conn.cursor()
@@ -213,23 +213,27 @@ def clear_simulation_logs():
     except Exception as e:
         return fetch_simulation_logs(), f"Error clearing logs: {e}"
 
-# --- Series History & Team Stats Queries ---
 
 def fetchserieshistory(startyear, endyear):
-    conn = getdbconnection()
-    cursor = conn.cursor(dictionary=True)
-    query = """
-        SELECT year AS Year, champion AS Champion, runner_up AS Runner_Up, 
-               score AS Score, finals_mvp AS Finals_MVP, total_games AS Total_Games
-        FROM series_history 
-        WHERE year BETWEEN %s AND %s 
-        ORDER BY year DESC
-    """
-    cursor.execute(query, (int(startyear), int(endyear)))
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return pd.DataFrame(rows)
+    try:
+        conn = getdbconnection()
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT year AS Year, champion AS Champion, runner_up AS Runner_Up, 
+                   score AS Score, finals_mvp AS Finals_MVP, total_games AS Total_Games
+            FROM series_history 
+            WHERE year BETWEEN %s AND %s 
+            ORDER BY year DESC
+        """
+        cursor.execute(query, (int(startyear), int(endyear)))
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return pd.DataFrame(rows)
+    except Exception as e:
+        print(f"Error fetching series history: {e}")
+        return pd.DataFrame()
+
 
 def fetchallteams():
     try:
@@ -243,17 +247,22 @@ def fetchallteams():
     except Exception:
         return ["2017 Golden State Warriors", "2013 Miami Heat"]
 
+
 def fetchteamratings(teamname):
-    conn = getdbconnection()
-    cursor = conn.cursor(dictionary=True)
-    query = "SELECT off_rating, def_rating FROM team_stats WHERE team_name = %s"
-    cursor.execute(query, (teamname,))
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    if row:
-        return float(row["off_rating"]), float(row["def_rating"])
-    return 110.0, 110.0
+    try:
+        conn = getdbconnection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT off_rating, def_rating FROM team_stats WHERE team_name = %s"
+        cursor.execute(query, (teamname,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            return float(row["off_rating"]), float(row["def_rating"])
+        return 110.0, 110.0
+    except Exception:
+        return 110.0, 110.0
+
 
 def runmontecarlosimulation(teama, teamb, simulations):
     offa, defa = fetchteamratings(teama)
@@ -283,16 +292,13 @@ def runmontecarlosimulation(teama, teamb, simulations):
     pcta = (winsa / sims) * 100
     pctb = (winsb / sims) * 100
     
-    # Log simulation result to database
     log_simulation(teama, teamb, sims, round(pcta, 2), round(pctb, 2))
     
     summary = f"{teama} (Off: {offa}, Def: {defa}) vs {teamb} (Off: {offb}, Def: {defb})"
     return summary, f"{pcta:.2f}%", f"{pctb:.2f}%"
 
-# --- Plotly Visualizations ---
 
 def generate_ratings_scatter():
-    """Generates an interactive scatter plot comparing Offensive vs Defensive Ratings."""
     try:
         conn = getdbconnection()
         query = """
@@ -309,8 +315,19 @@ def generate_ratings_scatter():
             LEFT JOIN series_history s 
                 ON t.team_name = CONCAT(s.year, ' ', s.champion)
         """
-        df = pd.read_sql(query, conn)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
         conn.close()
+
+        df = pd.DataFrame(rows)
+        if df.empty:
+            return go.Figure()
+
+        df["off_rating"] = df["off_rating"].astype(float)
+        df["def_rating"] = df["def_rating"].astype(float)
+        df["net_rating"] = df["net_rating"].astype(float)
 
         fig = px.scatter(
             df,
@@ -338,8 +355,8 @@ def generate_ratings_scatter():
         print(f"Error building scatter chart: {e}")
         return go.Figure()
 
+
 def generate_era_trend():
-    """Generates an interactive trend line showing rating evolution across years."""
     try:
         conn = getdbconnection()
         query = """
@@ -351,8 +368,19 @@ def generate_era_trend():
             GROUP BY year
             ORDER BY year ASC
         """
-        df = pd.read_sql(query, conn)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
         conn.close()
+
+        df = pd.DataFrame(rows)
+        if df.empty:
+            return go.Figure()
+
+        df["year"] = df["year"].astype(int)
+        df["avg_off_rating"] = df["avg_off_rating"].astype(float)
+        df["avg_def_rating"] = df["avg_def_rating"].astype(float)
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(
@@ -379,16 +407,13 @@ def generate_era_trend():
         print(f"Error building trend chart: {e}")
         return go.Figure()
 
-# --- Gradio UI Layout ---
 
 teamoptions = fetchallteams()
 
-with gr.Blocks(title="HoopsData - NBA Analytics Platform") as mainapp:
+with gr.Blocks(title="HoopsData - NBA Analytics Platform", analytics_enabled=False) as mainapp:
     gr.Markdown("# 🏀 HoopsData - NBA Finals Analytics & Simulation Engine")
 
     with gr.Tabs():
-        
-        # TAB 1: Series History
         with gr.TabItem("Series History"):
             gr.Markdown("### Historical NBA Finals Records (2001–2026)")
             with gr.Row():
@@ -396,9 +421,14 @@ with gr.Blocks(title="HoopsData - NBA Analytics Platform") as mainapp:
                 end_input = gr.Number(label="End Year", value=2026, precision=0)
             fetch_btn = gr.Button("Query History", variant="primary")
             history_df = gr.Dataframe(value=fetchserieshistory(2001, 2026), label="Finals Records")
-            fetch_btn.click(fn=fetchserieshistory, inputs=[start_input, end_input], outputs=history_df)
+            
+            fetch_btn.click(
+                fn=fetchserieshistory,
+                inputs=[start_input, end_input],
+                outputs=history_df,
+                api_name=False
+            )
 
-        # TAB 2: Matchup Simulator
         with gr.TabItem("Matchup Simulator"):
             gr.Markdown("### Monte Carlo Series Simulation Engine")
             with gr.Row():
@@ -416,10 +446,10 @@ with gr.Blocks(title="HoopsData - NBA Analytics Platform") as mainapp:
             sim_btn.click(
                 fn=runmontecarlosimulation,
                 inputs=[team_a_dropdown, team_b_dropdown, sim_slider],
-                outputs=[rating_breakdown, team_a_win_out, team_b_win_out]
+                outputs=[rating_breakdown, team_a_win_out, team_b_win_out],
+                api_name=False
             )
 
-        # TAB 3: Visual Analytics
         with gr.TabItem("Visual Analytics"):
             gr.Markdown("### Interactive Efficiency Data Visualizations")
             refresh_charts_btn = gr.Button("Refresh Charts")
@@ -431,10 +461,10 @@ with gr.Blocks(title="HoopsData - NBA Analytics Platform") as mainapp:
 
             refresh_charts_btn.click(
                 fn=lambda: (generate_ratings_scatter(), generate_era_trend()),
-                outputs=[scatter_plot, trend_plot]
+                outputs=[scatter_plot, trend_plot],
+                api_name=False
             )
 
-        # TAB 4: Simulation Logs
         with gr.TabItem("Simulation History Logs"):
             gr.Markdown("### Database Simulation Run Logs")
             with gr.Row():
@@ -444,8 +474,16 @@ with gr.Blocks(title="HoopsData - NBA Analytics Platform") as mainapp:
             status_box = gr.Textbox(label="System Status", value="Ready")
             logs_df = gr.Dataframe(value=fetch_simulation_logs(), label="Recent Simulations (Stored in MySQL)")
 
-            refresh_logs_btn.click(fn=fetch_simulation_logs, outputs=logs_df)
-            clear_logs_btn.click(fn=clear_simulation_logs, outputs=[logs_df, status_box])
+            refresh_logs_btn.click(
+                fn=fetch_simulation_logs,
+                outputs=logs_df,
+                api_name=False
+            )
+            clear_logs_btn.click(
+                fn=clear_simulation_logs,
+                outputs=[logs_df, status_box],
+                api_name=False
+            )
 
 if __name__ == "__main__":
-    mainapp.launch(inbrowser=True)
+    mainapp.launch(inbrowser=True, show_api=False)
