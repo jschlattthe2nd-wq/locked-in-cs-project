@@ -164,12 +164,21 @@ def initdatabase():
                 (68, "2024 Dallas Mavericks", 2024, "West", 117.0, 114.9, 100.1, "Jason Kidd"),
                 (69, "2025 Oklahoma City Thunder", 2025, "West", 118.5, 108.2, 100.4, "Mark Daigneault"),
                 (70, "2025 Indiana Pacers", 2025, "East", 119.8, 115.1, 101.8, "Rick Carlisle"),
-                (71, "2026 Boston Celtics", 2026, "East", 121.5, 110.1, 98.5, "Joe Mazzulla"),
-                (72, "2026 Oklahoma City Thunder", 2026, "West", 119.2, 108.7, 99.9, "Mark Daigneault")
+                (71, "2026 New York Knicks", 2026, "East", 119.8, 111.2, 97.8, "Mike Brown"),
+                (72, "2026 San Antonio Spurs", 2026, "West", 118.4, 110.1, 99.6, "Mitch Johnson")
             ]
             cursor.executemany(
                 "INSERT INTO teamstats VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 teamdata
+            )
+        else:
+            cursor.execute(
+                "REPLACE INTO teamstats VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (71, "2026 New York Knicks", 2026, "East", 119.8, 111.2, 97.8, "Mike Brown")
+            )
+            cursor.execute(
+                "REPLACE INTO teamstats VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (72, "2026 San Antonio Spurs", 2026, "West", 118.4, 110.1, 99.6, "Mitch Johnson")
             )
 
         cursor.execute("SELECT COUNT(*) FROM serieshistory")
@@ -210,11 +219,16 @@ def initdatabase():
                 (2023, "Denver Nuggets", "Miami Heat", "4 to 1", "Nikola Jokic", 5, 19600),
                 (2024, "Boston Celtics", "Dallas Mavericks", "4 to 1", "Jaylen Brown", 5, 19700),
                 (2025, "Oklahoma City Thunder", "Indiana Pacers", "4 to 3", "Shai Gilgeous Alexander", 7, 18200),
-                (2026, "Boston Celtics", "Oklahoma City Thunder", "4 to 2", "Jayson Tatum", 6, 18900)
+                (2026, "New York Knicks", "San Antonio Spurs", "4 to 1", "Jalen Brunson", 5, 19150)
             ]
             cursor.executemany(
                 "INSERT INTO serieshistory VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 historydata
+            )
+        else:
+            cursor.execute(
+                "REPLACE INTO serieshistory VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (2026, "New York Knicks", "San Antonio Spurs", "4 to 1", "Jalen Brunson", 5, 19150)
             )
 
         cursor.execute("SELECT COUNT(*) FROM mvpstats")
@@ -254,12 +268,21 @@ def initdatabase():
                 (2022, "Stephen Curry", "Golden State Warriors", 31.2, 6.0, 5.0, 48.2),
                 (2023, "Nikola Jokic", "Denver Nuggets", 30.2, 14.0, 7.2, 58.3),
                 (2024, "Jaylen Brown", "Boston Celtics", 20.8, 5.4, 5.0, 44.0),
-                (2025, "Shai Gilgeous Alexander", "Oklahoma City Thunder", 31.8, 6.2, 6.8, 51.4),
-                (2026, "Jayson Tatum", "Boston Celtics", 27.6, 8.8, 6.1, 47.5)
+                (2025, "Shai Gilgeous Alexander", "Oklahoma City Thunder", 30.3, 4.6, 5.6, 44.3),
+                (2026, "Jalen Brunson", "New York Knicks", 32.6, 4.2, 4.6, 42.1)
             ]
             cursor.executemany(
                 "INSERT INTO mvpstats VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 mvpdata
+            )
+        else:
+            cursor.execute(
+                "REPLACE INTO mvpstats VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (2025, "Shai Gilgeous Alexander", "Oklahoma City Thunder", 30.3, 4.6, 5.6, 44.3)
+            )
+            cursor.execute(
+                "REPLACE INTO mvpstats VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (2026, "Jalen Brunson", "New York Knicks", 32.6, 4.2, 4.6, 42.1)
             )
 
         cursor.execute("SELECT COUNT(*) FROM arenainfo")
@@ -271,7 +294,7 @@ def initdatabase():
                 (4, "Frost Bank Center", "San Antonio", "San Antonio Spurs", 18418, 2002),
                 (5, "Kaseya Center", "Miami", "Miami Heat", 19600, 1999),
                 (6, "Chase Center", "San Francisco", "Golden State Warriors", 18064, 2019),
-                (7, "Rocket Mortgage FieldHouse", "Cleveland", "Cleveland Cavaliers", 19432, 1994),
+                (7, "Rocket Arena", "Cleveland", "Cleveland Cavaliers", 19432, 1994),
                 (8, "American Airlines Center", "Dallas", "Dallas Mavericks", 19200, 2001),
                 (9, "Little Caesars Arena", "Detroit", "Detroit Pistons", 20332, 2017),
                 (10, "Toyota Center", "Houston", "Houston Rockets", 18055, 2003),
@@ -281,7 +304,7 @@ def initdatabase():
                 (14, "Paycom Center", "Oklahoma City", "Oklahoma City Thunder", 18203, 2002),
                 (15, "Gainbridge Fieldhouse", "Indianapolis", "Indiana Pacers", 17923, 1999),
                 (16, "Madison Square Garden", "New York", "New York Knicks", 19812, 1968),
-                (17, "Wells Fargo Center", "Philadelphia", "Philadelphia 76ers", 20478, 1996),
+                (17, "Xfinity Mobile Arena", "Philadelphia", "Philadelphia 76ers", 20478, 1996),
                 (18, "Footprint Center", "Phoenix", "Phoenix Suns", 17071, 1992),
                 (19, "Kia Center", "Orlando", "Orlando Magic", 18846, 2010),
                 (20, "Delta Center", "Salt Lake City", "Utah Jazz", 18306, 1991),
@@ -297,7 +320,7 @@ def initdatabase():
         cursor.close()
         conn.close()
     except Exception as e:
-        print("Database setup error:", e)
+        print("Portal initialization error:", e)
 
 def printline(length):
     print("=" * length)
@@ -310,7 +333,7 @@ def printheader(title):
 
 def pausescreen():
     print()
-    input("Press Enter to return to menu...")
+    input("Press Enter to go back...")
 
 def readint(prompt, minval, maxval):
     while True:
@@ -341,7 +364,7 @@ def readtext(prompt):
         val = input(prompt).strip()
         if len(val) > 0:
             return val
-        print("Input cannot be empty. Please try again.")
+        print("This field cannot be empty. Please try again.")
 
 def formatcell(value, width):
     text = str(value)
@@ -358,7 +381,7 @@ def printtable(headers, widths, rows):
     print(headerline)
     printline(totalwidth)
     if len(rows) == 0:
-        print("| " + "No matching records found.".ljust(totalwidth - 4) + " |")
+        print("| " + "No matching results found.".ljust(totalwidth - 4) + " |")
     else:
         for row in rows:
             rowline = "| "
@@ -366,10 +389,10 @@ def printtable(headers, widths, rows):
                 rowline = rowline + formatcell(row[i], widths[i]) + " | "
             print(rowline)
     printline(totalwidth)
-    print("Total Records Displayed:", len(rows))
+    print("Showing", len(rows), "results")
 
 def viewallteams():
-    printheader("ALL NBA FINALS TEAMS IN DATABASE")
+    printheader("ALL NBA FINALS TEAMS DIRECTORY")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -380,14 +403,14 @@ def viewallteams():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Pace", "Head Coach"]
+    headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Pace", "Head Coach"]
     widths = [4, 28, 6, 6, 7, 7, 7, 6, 18]
     printtable(headers, widths, rows)
 
 def viewteamsbyyear():
-    printheader("FILTER TEAMS BY SEASON YEAR RANGE")
-    startyear = readint("Enter Start Year (1991 to 2030): ", 1991, 2030)
-    endyear = readint("Enter End Year (1991 to 2030): ", startyear, 2030)
+    printheader("BROWSE TEAMS BY SEASON YEARS")
+    startyear = readint("Enter Starting Season Year (1991 to 2030): ", 1991, 2030)
+    endyear = readint("Enter Ending Season Year (1991 to 2030): ", startyear, 2030)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -399,15 +422,15 @@ def viewteamsbyyear():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Head Coach"]
+    headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Head Coach"]
     widths = [4, 28, 6, 6, 7, 7, 7, 18]
     printtable(headers, widths, rows)
 
 def viewteamsbyconference():
-    printheader("FILTER TEAMS BY CONFERENCE")
-    print("1. Eastern Conference (East)")
-    print("2. Western Conference (West)")
-    choice = readint("Choose conference (1 or 2): ", 1, 2)
+    printheader("BROWSE TEAMS BY CONFERENCE")
+    print("1. Eastern Conference")
+    print("2. Western Conference")
+    choice = readint("Select a conference (1 or 2): ", 1, 2)
     conf = "East" if choice == 1 else "West"
     conn = getdbconnection()
     cursor = conn.cursor()
@@ -420,13 +443,13 @@ def viewteamsbyconference():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Team Name", "Year", "OffRtg", "DefRtg", "NetRtg", "Pace", "Head Coach"]
+    headers = ["ID", "Team Name", "Year", "Offense", "Defense", "Overall", "Pace", "Head Coach"]
     widths = [4, 28, 6, 7, 7, 7, 6, 18]
     printtable(headers, widths, rows)
 
 def searchteambyname():
-    printheader("SEARCH TEAM BY FRANCHISE OR COACH NAME")
-    keyword = readtext("Enter team name or coach keyword: ")
+    printheader("SEARCH TEAMS BY FRANCHISE OR COACH")
+    keyword = readtext("Enter a team name or head coach name: ")
     conn = getdbconnection()
     cursor = conn.cursor()
     pattern = "%" + keyword + "%"
@@ -439,12 +462,12 @@ def searchteambyname():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Head Coach"]
+    headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Head Coach"]
     widths = [4, 28, 6, 6, 7, 7, 7, 18]
     printtable(headers, widths, rows)
 
 def topoffensiveteams():
-    printheader("TOP 15 OFFENSIVE FINALS TEAMS OF ALL TIME")
+    printheader("TOP 15 HIGHEST SCORING FINALS TEAMS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -455,12 +478,12 @@ def topoffensiveteams():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Team Name", "Year", "Conf", "OffRtg", "DefRtg", "NetRtg", "Head Coach"]
+    headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Head Coach"]
     widths = [4, 28, 6, 6, 7, 7, 7, 18]
     printtable(headers, widths, rows)
 
 def topdefensiveteams():
-    printheader("TOP 15 DEFENSIVE FINALS TEAMS OF ALL TIME (LOWEST DEFRTG)")
+    printheader("TOP 15 BEST DEFENSIVE FINALS TEAMS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -471,14 +494,54 @@ def topdefensiveteams():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Team Name", "Year", "Conf", "DefRtg", "OffRtg", "NetRtg", "Head Coach"]
+    headers = ["ID", "Team Name", "Year", "Conf", "Defense", "Offense", "Overall", "Head Coach"]
     widths = [4, 28, 6, 6, 7, 7, 7, 18]
     printtable(headers, widths, rows)
 
+def comparetwoteams():
+    printheader("SIDE BY SIDE TEAM COMPARISON")
+    id1 = readint("Enter First Team ID: ", 1, 9999)
+    id2 = readint("Enter Second Team ID: ", 1, 9999)
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT teamname, seasonyear, conference, offrating, defrating, pace, coach "
+        "FROM teamstats WHERE teamid = %s",
+        (id1,)
+    )
+    t1 = cursor.fetchone()
+    cursor.execute(
+        "SELECT teamname, seasonyear, conference, offrating, defrating, pace, coach "
+        "FROM teamstats WHERE teamid = %s",
+        (id2,)
+    )
+    t2 = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not t1 or not t2:
+        print("One or both Team IDs could not be found.")
+        return
+
+    net1 = round(float(t1[3]) - float(t1[4]), 2)
+    net2 = round(float(t2[3]) - float(t2[4]), 2)
+    headers = ["Team Attribute", t1[0], t2[0]]
+    widths = [22, 26, 26]
+    rows = [
+        ("Season Year", t1[1], t2[1]),
+        ("Conference", t1[2], t2[2]),
+        ("Head Coach", t1[6], t2[6]),
+        ("Offensive Rating", t1[3], t2[3]),
+        ("Defensive Rating", t1[4], t2[4]),
+        ("Overall Net Rating", net1, net2),
+        ("Game Pace", t1[5], t2[5])
+    ]
+    printtable(headers, widths, rows)
+
 def addnewteam():
-    printheader("ADD NEW NBA FINALS TEAM RECORD")
+    printheader("ADD A NEW FINALS TEAM")
     seasonyear = readint("Enter Season Year (1950 to 2035): ", 1950, 2035)
-    franchise = readtext("Enter Franchise Name (e.g., Boston Celtics): ")
+    franchise = readtext("Enter Team Franchise Name (for example, New York Knicks): ")
     teamname = str(seasonyear) + " " + franchise
     print("Select Conference: 1. East  2. West")
     confchoice = readint("Enter choice (1 or 2): ", 1, 2)
@@ -498,15 +561,15 @@ def addnewteam():
             (newid, teamname, seasonyear, conference, offrating, defrating, pace, coach)
         )
         conn.commit()
-        print("Successfully added team:", teamname, "with ID:", newid)
+        print("Added team:", teamname, "with ID:", newid)
     except Exception as e:
-        print("Error adding team record:", e)
+        print("Could not add team:", e)
     cursor.close()
     conn.close()
 
 def updateteamratings():
-    printheader("UPDATE TEAM OFFENSIVE AND DEFENSIVE RATINGS")
-    teamid = readint("Enter Team ID to update: ", 1, 9999)
+    printheader("EDIT TEAM RATINGS AND PACE")
+    teamid = readint("Enter Team ID to edit: ", 1, 9999)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT teamname, offrating, defrating, pace FROM teamstats WHERE teamid = %s", (teamid,))
@@ -517,7 +580,7 @@ def updateteamratings():
         conn.close()
         return
     print("Selected Team:", row[0])
-    print("Current OffRtg:", row[1], "| Current DefRtg:", row[2], "| Current Pace:", row[3])
+    print("Current Offense:", row[1], "| Current Defense:", row[2], "| Current Pace:", row[3])
     newoff = readfloat("Enter New Offensive Rating (80.0 to 140.0): ", 80.0, 140.0)
     newdef = readfloat("Enter New Defensive Rating (80.0 to 140.0): ", 80.0, 140.0)
     newpace = readfloat("Enter New Pace (75.0 to 120.0): ", 75.0, 120.0)
@@ -526,13 +589,13 @@ def updateteamratings():
         (newoff, newdef, newpace, teamid)
     )
     conn.commit()
-    print("Successfully updated ratings for", row[0])
+    print("Updated ratings for", row[0])
     cursor.close()
     conn.close()
 
 def updateteamcoach():
-    printheader("UPDATE TEAM HEAD COACH")
-    teamid = readint("Enter Team ID to update: ", 1, 9999)
+    printheader("CHANGE TEAM HEAD COACH")
+    teamid = readint("Enter Team ID to edit: ", 1, 9999)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT teamname, coach FROM teamstats WHERE teamid = %s", (teamid,))
@@ -542,17 +605,17 @@ def updateteamcoach():
         cursor.close()
         conn.close()
         return
-    print("Selected Team:", row[0], "| Current Coach:", row[1])
+    print("Selected Team:", row[0], "| Current Head Coach:", row[1])
     newcoach = readtext("Enter New Head Coach Name: ")
     cursor.execute("UPDATE teamstats SET coach = %s WHERE teamid = %s", (newcoach, teamid))
     conn.commit()
-    print("Successfully updated coach for", row[0])
+    print("Updated head coach for", row[0])
     cursor.close()
     conn.close()
 
 def deleteteamrecord():
-    printheader("DELETE TEAM RECORD FROM DATABASE")
-    teamid = readint("Enter Team ID to delete: ", 1, 9999)
+    printheader("REMOVE A TEAM FROM DIRECTORY")
+    teamid = readint("Enter Team ID to remove: ", 1, 9999)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT teamname FROM teamstats WHERE teamid = %s", (teamid,))
@@ -562,31 +625,32 @@ def deleteteamrecord():
         cursor.close()
         conn.close()
         return
-    confirm = readtext("Type YES to confirm deletion of " + row[0] + ": ")
+    confirm = readtext("Type YES to confirm removing " + row[0] + ": ")
     if confirm.upper() == "YES":
         cursor.execute("DELETE FROM teamstats WHERE teamid = %s", (teamid,))
         conn.commit()
-        print("Deleted team record:", row[0])
+        print("Removed team:", row[0])
     else:
-        print("Deletion cancelled.")
+        print("Action cancelled.")
     cursor.close()
     conn.close()
 
 def teammenu():
     while True:
-        printheader("MODULE 1: NBA FINALS TEAM STATS MANAGEMENT")
-        print("1. View All Teams in Database")
-        print("2. Filter Teams by Season Year Range")
-        print("3. Filter Teams by Conference (East / West)")
-        print("4. Search Teams by Franchise or Coach Name")
-        print("5. View Top 15 Offensive Teams")
-        print("6. View Top 15 Defensive Teams")
-        print("7. Add New Team Record (INSERT)")
-        print("8. Update Team Efficiency Ratings (UPDATE)")
-        print("9. Update Team Head Coach (UPDATE)")
-        print("10. Delete Team Record (DELETE)")
-        print("0. Return to Main Menu")
-        choice = readint("Enter your choice (0 to 10): ", 0, 10)
+        printheader("HOOPSDATA.COM / TEAMS AND RATINGS")
+        print("1. Browse All Finals Teams")
+        print("2. Browse Teams by Season Years")
+        print("3. Browse Teams by Conference")
+        print("4. Search Teams by Franchise or Coach")
+        print("5. Top 15 Highest Scoring Teams")
+        print("6. Top 15 Best Defensive Teams")
+        print("7. Compare Two Teams Side by Side")
+        print("8. Add a New Team")
+        print("9. Edit Team Ratings")
+        print("10. Change Team Head Coach")
+        print("11. Remove a Team")
+        print("0. Back to Home Page")
+        choice = readint("Choose an option (0 to 11): ", 0, 11)
         if choice == 1:
             viewallteams()
             pausescreen()
@@ -606,22 +670,25 @@ def teammenu():
             topdefensiveteams()
             pausescreen()
         elif choice == 7:
-            addnewteam()
+            comparetwoteams()
             pausescreen()
         elif choice == 8:
-            updateteamratings()
+            addnewteam()
             pausescreen()
         elif choice == 9:
-            updateteamcoach()
+            updateteamratings()
             pausescreen()
         elif choice == 10:
+            updateteamcoach()
+            pausescreen()
+        elif choice == 11:
             deleteteamrecord()
             pausescreen()
         elif choice == 0:
             break
 
 def viewallseries():
-    printheader("COMPLETE NBA FINALS SERIES ARCHIVE (1991 TO 2026)")
+    printheader("NBA FINALS SERIES ARCHIVE (1991 TO 2026)")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -631,12 +698,12 @@ def viewallseries():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Games", "Attendance"]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games", "Attendance"]
     widths = [6, 22, 22, 8, 22, 5, 10]
     printtable(headers, widths, rows)
 
 def viewseriesbyyearrange():
-    printheader("QUERY FINALS SERIES BY YEAR RANGE")
+    printheader("BROWSE FINALS SERIES BY YEARS")
     startyear = readint("Enter Start Year: ", 1950, 2035)
     endyear = readint("Enter End Year: ", startyear, 2035)
     conn = getdbconnection()
@@ -649,13 +716,13 @@ def viewseriesbyyearrange():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Games", "Attendance"]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games", "Attendance"]
     widths = [6, 22, 22, 8, 22, 5, 10]
     printtable(headers, widths, rows)
 
 def searchseriesbyteam():
     printheader("SEARCH FINALS SERIES BY FRANCHISE")
-    team = readtext("Enter Franchise Name (e.g., Lakers, Bulls, Heat): ")
+    team = readtext("Enter Franchise Name (for example, Knicks, Spurs, Lakers): ")
     pattern = "%" + team + "%"
     conn = getdbconnection()
     cursor = conn.cursor()
@@ -667,12 +734,12 @@ def searchseriesbyteam():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Games"]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games"]
     widths = [6, 23, 23, 8, 22, 5]
     printtable(headers, widths, rows)
 
 def viewgame7series():
-    printheader("CLASSIC 7 GAME NBA FINALS SERIES")
+    printheader("CLASSIC 7 GAME FINALS SHOWDOWNS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -682,12 +749,12 @@ def viewgame7series():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Attendance"]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Attendance"]
     widths = [6, 23, 23, 8, 22, 10]
     printtable(headers, widths, rows)
 
 def viewsweepseries():
-    printheader("NBA FINALS SWEEPS (4 GAME SERIES)")
+    printheader("NBA FINALS 4 GAME SWEEPS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -697,12 +764,12 @@ def viewsweepseries():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Score", "Finals MVP", "Attendance"]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Attendance"]
     widths = [6, 23, 23, 8, 22, 10]
     printtable(headers, widths, rows)
 
 def championshipleaderboard():
-    printheader("FRANCHISE CHAMPIONSHIP COUNT LEADERBOARD")
+    printheader("CHAMPIONSHIPS WON BY FRANCHISE")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -717,7 +784,7 @@ def championshipleaderboard():
     printtable(headers, widths, rows)
 
 def finalsappearancesleaderboard():
-    printheader("FRANCHISE FINALS APPEARANCES SUMMARY")
+    printheader("TOTAL FINALS APPEARANCES BY FRANCHISE")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT champion, runnerup FROM serieshistory")
@@ -745,12 +812,12 @@ def finalsappearancesleaderboard():
         tabledata.append((team, total, w, l, str(winpct) + "%"))
 
     tabledata.sort(key=lambda item: (item[1], item[2]), reverse=True)
-    headers = ["Franchise Name", "Appearances", "Finals Wins", "Finals Losses", "Win Pct"]
+    headers = ["Franchise Name", "Appearances", "Finals Wins", "Finals Losses", "Win Rate"]
     widths = [26, 13, 13, 14, 10]
     printtable(headers, widths, tabledata)
 
 def addseriesrecord():
-    printheader("ADD NEW NBA FINALS SERIES RECORD")
+    printheader("ADD A FINALS SERIES")
     year = readint("Enter Finals Year (1950 to 2035): ", 1950, 2035)
     champion = readtext("Enter Champion Franchise Name: ")
     runnerup = readtext("Enter Runner Up Franchise Name: ")
@@ -768,25 +835,25 @@ def addseriesrecord():
             (year, champion, runnerup, seriesresult, finalsmvp, totalgames, avgattendance)
         )
         conn.commit()
-        print("Successfully recorded Finals series for year", year)
+        print("Added Finals series for year", year)
     except Exception as e:
-        print("Error inserting series record:", e)
+        print("Could not add Finals series:", e)
     cursor.close()
     conn.close()
 
 def updateseriesrecord():
-    printheader("UPDATE EXISTING NBA FINALS SERIES RECORD")
-    year = readint("Enter Finals Year to update: ", 1950, 2035)
+    printheader("EDIT A FINALS SERIES")
+    year = readint("Enter Finals Year to edit: ", 1950, 2035)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT champion, runnerup, seriesresult, finalsmvp FROM serieshistory WHERE year = %s", (year,))
     row = cursor.fetchone()
     if not row:
-        print("No Finals record found for year:", year)
+        print("No Finals series found for year:", year)
         cursor.close()
         conn.close()
         return
-    print("Current Record:", year, "| Champion:", row[0], "| Runner Up:", row[1], "| MVP:", row[3])
+    print("Selected Year:", year, "| Champion:", row[0], "| Runner Up:", row[1], "| MVP:", row[3])
     champion = readtext("Enter Updated Champion Name: ")
     runnerup = readtext("Enter Updated Runner Up Name: ")
     loserwins = readint("Enter games won by Runner Up (0 to 3): ", 0, 3)
@@ -801,47 +868,47 @@ def updateseriesrecord():
         (champion, runnerup, seriesresult, finalsmvp, totalgames, avgattendance, year)
     )
     conn.commit()
-    print("Successfully updated series record for year", year)
+    print("Updated Finals series for year", year)
     cursor.close()
     conn.close()
 
 def deleteseriesrecord():
-    printheader("DELETE NBA FINALS SERIES RECORD")
-    year = readint("Enter Finals Year to delete: ", 1950, 2035)
+    printheader("REMOVE A FINALS SERIES")
+    year = readint("Enter Finals Year to remove: ", 1950, 2035)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT champion, runnerup FROM serieshistory WHERE year = %s", (year,))
     row = cursor.fetchone()
     if not row:
-        print("No Finals record found for year:", year)
+        print("No Finals series found for year:", year)
         cursor.close()
         conn.close()
         return
-    confirm = readtext("Type YES to delete " + str(year) + " Finals (" + row[0] + " vs " + row[1] + "): ")
+    confirm = readtext("Type YES to remove the " + str(year) + " Finals (" + row[0] + " vs " + row[1] + "): ")
     if confirm.upper() == "YES":
         cursor.execute("DELETE FROM serieshistory WHERE year = %s", (year,))
         conn.commit()
-        print("Deleted Finals series for year", year)
+        print("Removed Finals series for year", year)
     else:
-        print("Deletion cancelled.")
+        print("Action cancelled.")
     cursor.close()
     conn.close()
 
 def seriesmenu():
     while True:
-        printheader("MODULE 2: NBA FINALS SERIES HISTORY ARCHIVE")
-        print("1. View All Finals Series Records")
-        print("2. Filter Finals Series by Year Range")
-        print("3. Search Series by Franchise Name")
-        print("4. View All Game 7 Finals Series")
-        print("5. View All 4 Game Sweep Series")
-        print("6. View Championship Count Leaderboard")
-        print("7. View Total Finals Appearances Leaderboard")
-        print("8. Add New Finals Series Record (INSERT)")
-        print("9. Update Existing Finals Series Record (UPDATE)")
-        print("10. Delete Finals Series Record (DELETE)")
-        print("0. Return to Main Menu")
-        choice = readint("Enter your choice (0 to 10): ", 0, 10)
+        printheader("HOOPSDATA.COM / FINALS SERIES ARCHIVE")
+        print("1. Browse All Finals Series")
+        print("2. Browse Series by Year Range")
+        print("3. Search Series by Franchise")
+        print("4. Classic Game 7 Showdowns")
+        print("5. 4 Game Finals Sweeps")
+        print("6. Championships by Franchise")
+        print("7. Total Finals Appearances by Franchise")
+        print("8. Add a Finals Series")
+        print("9. Edit a Finals Series")
+        print("10. Remove a Finals Series")
+        print("0. Back to Home Page")
+        choice = readint("Choose an option (0 to 10): ", 0, 10)
         if choice == 1:
             viewallseries()
             pausescreen()
@@ -876,7 +943,7 @@ def seriesmenu():
             break
 
 def viewallmvps():
-    printheader("NBA FINALS MVP STATISTICAL ARCHIVE")
+    printheader("NBA FINALS MVP HUB (1991 TO 2026)")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -886,13 +953,13 @@ def viewallmvps():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "MVP Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
+    headers = ["Year", "Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
     widths = [6, 24, 24, 6, 6, 6, 7]
     printtable(headers, widths, rows)
 
 def searchmvpbyplayer():
-    printheader("SEARCH FINALS MVP RECORDS BY PLAYER NAME")
-    name = readtext("Enter player name keyword: ")
+    printheader("SEARCH FINALS MVPS BY PLAYER")
+    name = readtext("Enter player name: ")
     pattern = "%" + name + "%"
     conn = getdbconnection()
     cursor = conn.cursor()
@@ -904,13 +971,13 @@ def searchmvpbyplayer():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "MVP Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
+    headers = ["Year", "Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
     widths = [6, 24, 24, 6, 6, 6, 7]
     printtable(headers, widths, rows)
 
 def filtermvpsbyppg():
-    printheader("FILTER FINALS MVPS BY MINIMUM SCORING AVERAGE (PPG)")
-    minppg = readfloat("Enter Minimum PPG (10.0 to 45.0): ", 10.0, 45.0)
+    printheader("BROWSE FINALS MVPS BY SCORING AVERAGE")
+    minppg = readfloat("Enter Minimum Points Per Game (10.0 to 45.0): ", 10.0, 45.0)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -921,12 +988,12 @@ def filtermvpsbyppg():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "MVP Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
+    headers = ["Year", "Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
     widths = [6, 24, 24, 6, 6, 6, 7]
     printtable(headers, widths, rows)
 
 def multiplemvpwinners():
-    printheader("MULTIPLE FINALS MVP AWARD WINNERS")
+    printheader("MULTI TIME FINALS MVP WINNERS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -942,7 +1009,7 @@ def multiplemvpwinners():
     printtable(headers, widths, rows)
 
 def comparetwomvps():
-    printheader("HEAD TO HEAD FINALS MVP PERFORMANCE COMPARISON")
+    printheader("HEAD TO HEAD FINALS MVP COMPARISON")
     year1 = readint("Enter First Finals Year (1991 to 2035): ", 1950, 2035)
     year2 = readint("Enter Second Finals Year (1991 to 2035): ", 1950, 2035)
     conn = getdbconnection()
@@ -955,34 +1022,34 @@ def comparetwomvps():
     conn.close()
 
     if not mvp1 or not mvp2:
-        print("One or both Finals years were not found in the MVP table.")
+        print("One or both Finals years could not be found.")
         return
 
-    headers = ["Metric", str(mvp1[0]) + " " + mvp1[1], str(mvp2[0]) + " " + mvp2[1]]
+    headers = ["Stat Category", str(mvp1[0]) + " " + mvp1[1], str(mvp2[0]) + " " + mvp2[1]]
     widths = [20, 28, 28]
     score1 = round(float(mvp1[3]) + (float(mvp1[4]) * 1.2) + (float(mvp1[5]) * 1.5), 2)
     score2 = round(float(mvp2[3]) + (float(mvp2[4]) * 1.2) + (float(mvp2[5]) * 1.5), 2)
     rows = [
-        ("Franchise", mvp1[2], mvp2[2]),
+        ("Team", mvp1[2], mvp2[2]),
         ("Points Per Game", mvp1[3], mvp2[3]),
         ("Rebounds Per Game", mvp1[4], mvp2[4]),
         ("Assists Per Game", mvp1[5], mvp2[5]),
         ("Field Goal Pct", str(mvp1[6]) + "%", str(mvp2[6]) + "%"),
-        ("Impact Index", score1, score2)
+        ("Overall Player Score", score1, score2)
     ]
     printtable(headers, widths, rows)
     if score1 > score2:
-        print("Higher Overall Impact Index:", mvp1[0], mvp1[1])
+        print("Higher Overall Performance:", mvp1[0], mvp1[1])
     elif score2 > score1:
-        print("Higher Overall Impact Index:", mvp2[0], mvp2[1])
+        print("Higher Overall Performance:", mvp2[0], mvp2[1])
     else:
-        print("Both MVP performances have an identical Impact Index!")
+        print("Both MVP performances tied in Overall Player Score!")
 
 def addmvprecord():
-    printheader("ADD NEW FINALS MVP RECORD")
+    printheader("ADD AN MVP PROFILE")
     year = readint("Enter Finals Year (1950 to 2035): ", 1950, 2035)
     playername = readtext("Enter MVP Player Name: ")
-    team = readtext("Enter Winner Team Name: ")
+    team = readtext("Enter Team Name: ")
     ppg = readfloat("Enter Points Per Game (0.0 to 60.0): ", 0.0, 60.0)
     rpg = readfloat("Enter Rebounds Per Game (0.0 to 35.0): ", 0.0, 35.0)
     apg = readfloat("Enter Assists Per Game (0.0 to 25.0): ", 0.0, 25.0)
@@ -996,25 +1063,25 @@ def addmvprecord():
             (year, playername, team, ppg, rpg, apg, fgpct)
         )
         conn.commit()
-        print("Successfully added Finals MVP record for", year)
+        print("Added Finals MVP profile for", year)
     except Exception as e:
-        print("Error adding MVP record:", e)
+        print("Could not add MVP profile:", e)
     cursor.close()
     conn.close()
 
 def updatemvprecord():
-    printheader("UPDATE FINALS MVP STATS")
-    year = readint("Enter Finals Year to update: ", 1950, 2035)
+    printheader("EDIT MVP STATS")
+    year = readint("Enter Finals Year to edit: ", 1950, 2035)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT playername, ppg, rpg, apg, fgpct FROM mvpstats WHERE year = %s", (year,))
     row = cursor.fetchone()
     if not row:
-        print("No MVP record found for year:", year)
+        print("No MVP profile found for year:", year)
         cursor.close()
         conn.close()
         return
-    print("Current MVP for", year, "is", row[0], "| PPG:", row[1], "RPG:", row[2], "APG:", row[3])
+    print("Selected Year:", year, "| Player:", row[0], "| PPG:", row[1], "RPG:", row[2], "APG:", row[3])
     playername = readtext("Enter Updated Player Name: ")
     ppg = readfloat("Enter Updated PPG: ", 0.0, 60.0)
     rpg = readfloat("Enter Updated RPG: ", 0.0, 35.0)
@@ -1025,45 +1092,45 @@ def updatemvprecord():
         (playername, ppg, rpg, apg, fgpct, year)
     )
     conn.commit()
-    print("Successfully updated MVP record for year", year)
+    print("Updated MVP profile for year", year)
     cursor.close()
     conn.close()
 
 def deletemvprecord():
-    printheader("DELETE FINALS MVP RECORD")
-    year = readint("Enter Finals Year to delete from MVP table: ", 1950, 2035)
+    printheader("REMOVE AN MVP PROFILE")
+    year = readint("Enter Finals Year to remove: ", 1950, 2035)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT playername FROM mvpstats WHERE year = %s", (year,))
     row = cursor.fetchone()
     if not row:
-        print("No MVP record found for year:", year)
+        print("No MVP profile found for year:", year)
         cursor.close()
         conn.close()
         return
-    confirm = readtext("Type YES to delete MVP record for " + str(year) + " (" + row[0] + "): ")
+    confirm = readtext("Type YES to remove the MVP profile for " + str(year) + " (" + row[0] + "): ")
     if confirm.upper() == "YES":
         cursor.execute("DELETE FROM mvpstats WHERE year = %s", (year,))
         conn.commit()
-        print("Deleted MVP record for year", year)
+        print("Removed MVP profile for year", year)
     else:
-        print("Deletion cancelled.")
+        print("Action cancelled.")
     cursor.close()
     conn.close()
 
 def mvpmenu():
     while True:
-        printheader("MODULE 3: FINALS MVP STATISTICAL DATABASE")
-        print("1. View All Finals MVP Records")
-        print("2. Search MVP Records by Player Name")
-        print("3. Filter MVPs by Minimum PPG")
-        print("4. View Multiple Finals MVP Winners")
+        printheader("HOOPSDATA.COM / FINALS MVP HUB")
+        print("1. Browse All Finals MVPs")
+        print("2. Search MVPs by Player Name")
+        print("3. Browse MVPs by Scoring Average")
+        print("4. Multi Time Finals MVP Winners")
         print("5. Compare Two Finals MVP Performances")
-        print("6. Add New Finals MVP Record (INSERT)")
-        print("7. Update Finals MVP Statistics (UPDATE)")
-        print("8. Delete Finals MVP Record (DELETE)")
-        print("0. Return to Main Menu")
-        choice = readint("Enter your choice (0 to 8): ", 0, 8)
+        print("6. Add an MVP Profile")
+        print("7. Edit MVP Stats")
+        print("8. Remove an MVP Profile")
+        print("0. Back to Home Page")
+        choice = readint("Choose an option (0 to 8): ", 0, 8)
         if choice == 1:
             viewallmvps()
             pausescreen()
@@ -1092,7 +1159,7 @@ def mvpmenu():
             break
 
 def viewallarenas():
-    printheader("NBA FINALS ARENA DIRECTORY")
+    printheader("NBA ARENAS AND VENUES DIRECTORY")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1102,13 +1169,13 @@ def viewallarenas():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Arena Name", "City", "Home Franchise", "Capacity", "Opened"]
+    headers = ["ID", "Arena Name", "City", "Home Team", "Capacity", "Opened"]
     widths = [4, 26, 15, 22, 9, 6]
     printtable(headers, widths, rows)
 
 def searcharenabycity():
-    printheader("SEARCH ARENA BY CITY OR FRANCHISE")
-    keyword = readtext("Enter city or franchise name: ")
+    printheader("SEARCH ARENAS BY CITY OR TEAM")
+    keyword = readtext("Enter city, team, or arena name: ")
     pattern = "%" + keyword + "%"
     conn = getdbconnection()
     cursor = conn.cursor()
@@ -1120,12 +1187,12 @@ def searcharenabycity():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Arena Name", "City", "Home Franchise", "Capacity", "Opened"]
+    headers = ["ID", "Arena Name", "City", "Home Team", "Capacity", "Opened"]
     widths = [4, 26, 15, 22, 9, 6]
     printtable(headers, widths, rows)
 
 def filterarenasbycapacity():
-    printheader("FILTER ARENAS BY MINIMUM SEATING CAPACITY")
+    printheader("BROWSE ARENAS BY SEATING CAPACITY")
     mincap = readint("Enter Minimum Seating Capacity (15000 to 25000): ", 15000, 25000)
     conn = getdbconnection()
     cursor = conn.cursor()
@@ -1137,12 +1204,12 @@ def filterarenasbycapacity():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Arena Name", "City", "Home Franchise", "Capacity", "Opened"]
+    headers = ["ID", "Arena Name", "City", "Home Team", "Capacity", "Opened"]
     widths = [4, 26, 15, 22, 9, 6]
     printtable(headers, widths, rows)
 
 def oldestarenasreport():
-    printheader("ARENAS ORDERED BY OPENING YEAR (OLDEST FIRST)")
+    printheader("CLASSIC AND HISTORIC NBA ARENAS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1152,15 +1219,15 @@ def oldestarenasreport():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Arena Name", "City", "Franchise", "Opened", "Years Old", "Capacity"]
-    widths = [4, 25, 14, 22, 6, 9, 8]
+    headers = ["ID", "Arena Name", "City", "Home Team", "Opened", "Years Active", "Capacity"]
+    widths = [4, 25, 14, 22, 6, 12, 8]
     printtable(headers, widths, rows)
 
 def addarenarecord():
-    printheader("ADD NEW NBA ARENA TO DIRECTORY")
+    printheader("REGISTER A NEW NBA ARENA")
     arenaname = readtext("Enter Arena Name: ")
     city = readtext("Enter City Name: ")
-    franchise = readtext("Enter Home Franchise Name: ")
+    franchise = readtext("Enter Home Team Name: ")
     capacity = readint("Enter Seating Capacity (10000 to 35000): ", 10000, 35000)
     openedyear = readint("Enter Year Opened (1950 to 2035): ", 1950, 2035)
 
@@ -1174,15 +1241,15 @@ def addarenarecord():
             (newid, arenaname, city, franchise, capacity, openedyear)
         )
         conn.commit()
-        print("Successfully added arena:", arenaname, "with ID:", newid)
+        print("Registered arena:", arenaname, "with ID:", newid)
     except Exception as e:
-        print("Error adding arena:", e)
+        print("Could not register arena:", e)
     cursor.close()
     conn.close()
 
 def updatearenacapacity():
-    printheader("UPDATE ARENA NAME OR SEATING CAPACITY")
-    arenaid = readint("Enter Arena ID to update: ", 1, 9999)
+    printheader("EDIT ARENA DETAILS")
+    arenaid = readint("Enter Arena ID to edit: ", 1, 9999)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT arenaname, capacity FROM arenainfo WHERE arenaid = %s", (arenaid,))
@@ -1200,13 +1267,13 @@ def updatearenacapacity():
         (newname, newcap, arenaid)
     )
     conn.commit()
-    print("Successfully updated arena ID", arenaid)
+    print("Updated details for arena ID", arenaid)
     cursor.close()
     conn.close()
 
 def deletearenarecord():
-    printheader("DELETE ARENA FROM DIRECTORY")
-    arenaid = readint("Enter Arena ID to delete: ", 1, 9999)
+    printheader("REMOVE AN ARENA")
+    arenaid = readint("Enter Arena ID to remove: ", 1, 9999)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT arenaname FROM arenainfo WHERE arenaid = %s", (arenaid,))
@@ -1216,28 +1283,28 @@ def deletearenarecord():
         cursor.close()
         conn.close()
         return
-    confirm = readtext("Type YES to delete arena " + row[0] + ": ")
+    confirm = readtext("Type YES to remove arena " + row[0] + ": ")
     if confirm.upper() == "YES":
         cursor.execute("DELETE FROM arenainfo WHERE arenaid = %s", (arenaid,))
         conn.commit()
-        print("Deleted arena:", row[0])
+        print("Removed arena:", row[0])
     else:
-        print("Deletion cancelled.")
+        print("Action cancelled.")
     cursor.close()
     conn.close()
 
 def arenamenu():
     while True:
-        printheader("MODULE 4: NBA ARENA DIRECTORY & STADIUM DATABASE")
-        print("1. View All Arenas by Capacity")
-        print("2. Search Arena by City or Franchise")
-        print("3. Filter Arenas by Minimum Capacity")
-        print("4. View Oldest NBA Arenas Report")
-        print("5. Add New Arena Record (INSERT)")
-        print("6. Update Arena Name or Capacity (UPDATE)")
-        print("7. Delete Arena Record (DELETE)")
-        print("0. Return to Main Menu")
-        choice = readint("Enter your choice (0 to 7): ", 0, 7)
+        printheader("HOOPSDATA.COM / NBA ARENAS AND VENUES")
+        print("1. Browse All Arenas by Capacity")
+        print("2. Search Arenas by City or Team")
+        print("3. Browse Arenas by Minimum Capacity")
+        print("4. Classic and Historic NBA Arenas")
+        print("5. Register a New Arena")
+        print("6. Edit Arena Details")
+        print("7. Remove an Arena")
+        print("0. Back to Home Page")
+        choice = readint("Choose an option (0 to 7): ", 0, 7)
         if choice == 1:
             viewallarenas()
             pausescreen()
@@ -1290,7 +1357,7 @@ def savetosimlogs(teama, teamb, winner, games, margin):
     conn.close()
 
 def runratingsimulation():
-    printheader("CROSS ERA EFFICIENCY MATCHUP PREDICTOR")
+    printheader("HEAD TO HEAD SERIES MATCHUP PREDICTOR")
     viewallteams()
     print()
     ida = readint("Enter Team ID for Team A: ", 1, 9999)
@@ -1299,7 +1366,7 @@ def runratingsimulation():
     teamb = getteambyid(idb)
 
     if not teama or not teamb:
-        print("One or both Team IDs do not exist in the database.")
+        print("One or both Team IDs could not be found.")
         return
 
     namea = teama[1]
@@ -1319,7 +1386,7 @@ def runratingsimulation():
     scoreb = round(((offb + defa) / 2.0) * (expectedpace / 100.0), 1)
     neta = round(offa - defa, 2)
     netb = round(offb - defb, 2)
-    diff = round( abs(scorea - scoreb), 2)
+    diff = round(abs(scorea - scoreb), 2)
 
     if scorea > scoreb:
         winner = namea
@@ -1337,32 +1404,32 @@ def runratingsimulation():
     else:
         predictedgames = 7
 
-    headers = ["Metric", namea, nameb]
+    headers = ["Comparison Metric", namea, nameb]
     widths = [24, 26, 26]
     rows = [
         ("Head Coach", coacha, coachb),
         ("Offensive Rating", offa, offb),
         ("Defensive Rating", defa, defb),
-        ("Net Efficiency Rating", neta, netb),
+        ("Overall Net Rating", neta, netb),
         ("Season Pace", pacea, paceb),
         ("Projected Game Score", scorea, scoreb)
     ]
     printtable(headers, widths, rows)
     print("Projected Series Winner:", winner)
     print("Projected Series Length:", predictedgames, "Games")
-    print("Projected Average Scoring Margin:", diff, "Points")
+    print("Projected Scoring Margin:", diff, "Points Per Game")
     savetosimlogs(namea, nameb, winner, predictedgames, diff)
-    print("Matchup prediction saved to Simulation Logs table.")
+    print("Matchup result saved to your Matchup History.")
 
 def runbestof7playbyplay():
-    printheader("GAME BY GAME 7 SERIES SIMULATOR")
-    ida = readint("Enter Team ID for Team A (Need ID list? View Module 1): ", 1, 9999)
+    printheader("7 GAME SERIES PLAY BY PLAY SIMULATOR")
+    ida = readint("Enter Team ID for Team A (See Teams page for IDs): ", 1, 9999)
     idb = readint("Enter Team ID for Team B: ", 1, 9999)
     teama = getteambyid(ida)
     teamb = getteambyid(idb)
 
     if not teama or not teamb:
-        print("One or both Team IDs were not found.")
+        print("One or both Team IDs could not be found.")
         return
 
     namea = teama[1]
@@ -1386,8 +1453,8 @@ def runbestof7playbyplay():
     gamerows = []
 
     while winsa < 4 and winsb < 4:
-        swinga = random.uniform(-8.0, 8.0)
-        swingb = random.uniform(-8.0, 8.0)
+        swinga = random.uniform(0.0, 16.0) - 8.0
+        swingb = random.uniform(0.0, 16.0) - 8.0
         pts1 = int(round(basea + swinga))
         pts2 = int(round(baseb + swingb))
         if pts1 == pts2:
@@ -1403,19 +1470,19 @@ def runbestof7playbyplay():
         gamerows.append(("Game " + str(gamenum), pts1, pts2, gamewinner, standing))
         gamenum = gamenum + 1
 
-    headers = ["Game", namea + " Pts", nameb + " Pts", "Game Winner", "Series Standing"]
+    headers = ["Game", namea + " Pts", nameb + " Pts", "Game Winner", "Series Lead"]
     widths = [8, 22, 22, 26, 15]
     printtable(headers, widths, gamerows)
 
     totalgames = winsa + winsb
     avgmargin = round(totalmargin / totalgames, 2)
     champion = namea if winsa == 4 else nameb
-    print("Simulated Series Champion:", champion, "in", totalgames, "games!")
+    print("Series Winner:", champion, "in", totalgames, "games!")
     savetosimlogs(namea, nameb, champion, totalgames, avgmargin)
-    print("Series result logged to MySQL database.")
+    print("Series result saved to your Matchup History.")
 
 def viewsimlogs():
-    printheader("SAVED MATCHUP SIMULATION LOGS")
+    printheader("RECENT MATCHUP SIMULATION HISTORY")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1425,13 +1492,13 @@ def viewsimlogs():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Timestamp", "Team A", "Team B", "Winner", "Games", "Margin"]
+    headers = ["ID", "Date and Time", "Team A", "Team B", "Winner", "Games", "Margin"]
     widths = [4, 19, 23, 23, 23, 5, 6]
     printtable(headers, widths, rows)
 
 def searchsimlogsbyteam():
-    printheader("SEARCH SIMULATION LOGS BY TEAM")
-    keyword = readtext("Enter Team Name keyword: ")
+    printheader("SEARCH MATCHUP HISTORY BY TEAM")
+    keyword = readtext("Enter Team Name: ")
     pattern = "%" + keyword + "%"
     conn = getdbconnection()
     cursor = conn.cursor()
@@ -1443,31 +1510,31 @@ def searchsimlogsbyteam():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Timestamp", "Team A", "Team B", "Winner", "Games", "Margin"]
+    headers = ["ID", "Date and Time", "Team A", "Team B", "Winner", "Games", "Margin"]
     widths = [4, 19, 23, 23, 23, 5, 6]
     printtable(headers, widths, rows)
 
 def deletesimlogbyid():
-    printheader("DELETE SINGLE SIMULATION LOG")
-    simid = readint("Enter Simulation Log ID to delete: ", 1, 99999)
+    printheader("REMOVE A MATCHUP FROM HISTORY")
+    simid = readint("Enter Matchup History ID to remove: ", 1, 99999)
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute("SELECT teama, teamb FROM simlogs WHERE simid = %s", (simid,))
     row = cursor.fetchone()
     if not row:
-        print("No simulation log found with ID:", simid)
+        print("No matchup found with ID:", simid)
         cursor.close()
         conn.close()
         return
     cursor.execute("DELETE FROM simlogs WHERE simid = %s", (simid,))
     conn.commit()
-    print("Deleted simulation log ID", simid, ":", row[0], "vs", row[1])
+    print("Removed matchup ID", simid, ":", row[0], "vs", row[1])
     cursor.close()
     conn.close()
 
 def clearallsimlogs():
-    printheader("CLEAR ALL SIMULATION LOGS")
-    confirm = readtext("Type YES to clear all records from simlogs table: ")
+    printheader("CLEAR ALL MATCHUP HISTORY")
+    confirm = readtext("Type YES to clear your entire Matchup History: ")
     if confirm.upper() == "YES":
         conn = getdbconnection()
         cursor = conn.cursor()
@@ -1475,21 +1542,21 @@ def clearallsimlogs():
         conn.commit()
         cursor.close()
         conn.close()
-        print("All simulation logs have been cleared.")
+        print("Matchup History has been cleared.")
     else:
-        print("Operation cancelled.")
+        print("Action cancelled.")
 
 def simulatormenu():
     while True:
-        printheader("MODULE 5: NBA FINALS MATCHUP SIMULATOR & LOGS")
-        print("1. Run Deterministic Efficiency Matchup Predictor")
-        print("2. Run Best of 7 Game by Game Series Simulator")
-        print("3. View Saved Simulation Logs")
-        print("4. Search Simulation Logs by Team")
-        print("5. Delete Single Simulation Log by ID (DELETE)")
-        print("6. Clear All Simulation Logs (TRUNCATE)")
-        print("0. Return to Main Menu")
-        choice = readint("Enter your choice (0 to 6): ", 0, 6)
+        printheader("HOOPSDATA.COM / MATCHUP PREDICTOR AND SIMULATOR")
+        print("1. Instant Matchup Predictor")
+        print("2. 7 Game Series Play by Play Simulator")
+        print("3. View Matchup History")
+        print("4. Search Matchup History by Team")
+        print("5. Remove a Matchup From History")
+        print("6. Clear All Matchup History")
+        print("0. Back to Home Page")
+        choice = readint("Choose an option (0 to 6): ", 0, 6)
         if choice == 1:
             runratingsimulation()
             pausescreen()
@@ -1511,8 +1578,8 @@ def simulatormenu():
         elif choice == 0:
             break
 
-def joinedchampionreport():
-    printheader("SQL JOIN REPORT: CHAMPIONS, TEAM EFFICIENCY & MVP STATS")
+def championshipseasonbreakdown():
+    printheader("CHAMPIONSHIP SEASON BREAKDOWN: TEAMS, COACHES AND MVPS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1526,12 +1593,12 @@ def joinedchampionreport():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "OffRtg", "DefRtg", "NetRtg", "Finals MVP", "MVP PPG", "Coach"]
-    widths = [5, 22, 6, 6, 6, 20, 7, 16]
+    headers = ["Year", "Champion", "Offense", "Defense", "Overall", "Finals MVP", "MVP PPG", "Head Coach"]
+    widths = [5, 22, 7, 7, 7, 20, 7, 16]
     printtable(headers, widths, rows)
 
 def decadesummaryreport():
-    printheader("ERA & DECADE EFFICIENCY AGGREGATION REPORT")
+    printheader("DECADE BY DECADE LEAGUE TRENDS (1990S TO 2020S)")
     conn = getdbconnection()
     cursor = conn.cursor()
     decades = [
@@ -1565,12 +1632,12 @@ def decadesummaryreport():
         ))
     cursor.close()
     conn.close()
-    headers = ["Decade Era", "Teams", "Avg OffRtg", "Avg DefRtg", "Avg Pace", "Avg Games", "Avg Attend"]
-    widths = [21, 6, 10, 10, 9, 9, 10]
+    headers = ["Decade Era", "Teams", "Avg Offense", "Avg Defense", "Avg Pace", "Avg Games", "Avg Crowd"]
+    widths = [21, 6, 11, 11, 9, 9, 10]
     printtable(headers, widths, reportrows)
 
 def drawratingchart():
-    printheader("TEXT BAR CHART: TOP 12 TEAMS BY NET RATING")
+    printheader("VISUAL CHART: HIGHEST RATED FINALS TEAMS OF ALL TIME")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1586,7 +1653,7 @@ def drawratingchart():
         print(formatcell(teamname, 28) + " | " + bar + " (" + str(netrtg) + ")")
 
 def drawtitlechart():
-    printheader("TEXT BAR CHART: CHAMPIONSHIPS BY FRANCHISE")
+    printheader("VISUAL CHART: MOST CHAMPIONSHIPS BY FRANCHISE")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1601,7 +1668,7 @@ def drawtitlechart():
         print(formatcell(team, 25) + " | " + bar + " (" + str(titles) + ")")
 
 def drawmvpscoringchart():
-    printheader("TEXT BAR CHART: TOP 12 FINALS MVP SCORING AVERAGES")
+    printheader("VISUAL CHART: HIGHEST SCORING FINALS MVPS")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1617,7 +1684,7 @@ def drawmvpscoringchart():
         print(formatcell(label, 28) + " | " + bar + " (" + str(ppg) + " PPG)")
 
 def coachleaderboard():
-    printheader("CHAMPIONSHIP COACH APPEARANCES IN FINALS")
+    printheader("MOST SUCCESSFUL FINALS HEAD COACHES")
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
@@ -1628,35 +1695,35 @@ def coachleaderboard():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Head Coach", "Finals Teams Coached", "Avg OffRtg", "Avg DefRtg"]
-    widths = [24, 22, 12, 12]
+    headers = ["Head Coach", "Finals Appearances", "Avg Offense", "Avg Defense"]
+    widths = [24, 20, 12, 12]
     printtable(headers, widths, rows)
 
-def databasestatssummary():
-    printheader("COMPLETE MYSQL DATABASE RECORD SUMMARY")
+def portalcontentoverview():
+    printheader("HOOPSDATA PORTAL CONTENT OVERVIEW")
     conn = getdbconnection()
     cursor = conn.cursor()
-    tables = [
-        ("teamstats", "Finals Team Efficiency Records"),
-        ("serieshistory", "Historical Finals Series Records"),
-        ("mvpstats", "Finals MVP Award Statistics"),
-        ("arenainfo", "NBA Stadium & Arena Directory"),
-        ("simlogs", "User Matchup Simulation Logs")
+    sections = [
+        ("teamstats", "Teams and Ratings Directory", "Historical Finals Teams"),
+        ("serieshistory", "Finals Series Archive", "Completed Championship Series"),
+        ("mvpstats", "Finals MVP Hub", "MVP Winner Profiles"),
+        ("arenainfo", "NBA Arenas and Venues", "Host Stadiums"),
+        ("simlogs", "Matchup Predictor History", "Saved User Simulations")
     ]
     summaryrows = []
-    for tname, desc in tables:
+    for tname, sectiontitle, category in sections:
         cursor.execute("SELECT COUNT(*) FROM " + tname)
         cnt = cursor.fetchone()[0]
-        summaryrows.append((tname, desc, cnt))
+        summaryrows.append((sectiontitle, category, cnt))
     cursor.close()
     conn.close()
-    headers = ["MySQL Table Name", "Table Description", "Row Count"]
-    widths = [20, 36, 12]
+    headers = ["Portal Section", "Content Category", "Total Entries"]
+    widths = [28, 30, 14]
     printtable(headers, widths, summaryrows)
 
 def resetdefaultdata():
-    printheader("RESET ALL TABLES TO DEFAULT HISTORICAL DATA")
-    confirm = readtext("Type RESET to drop and recreate all default records: ")
+    printheader("RESTORE DEFAULT PORTAL DATA")
+    confirm = readtext("Type RESET to restore all sections to default historical records: ")
     if confirm.upper() == "RESET":
         conn = getdbconnection()
         cursor = conn.cursor()
@@ -1669,25 +1736,25 @@ def resetdefaultdata():
         cursor.close()
         conn.close()
         initdatabase()
-        print("Database has been restored to default historical records.")
+        print("All portal sections have been restored to default records.")
     else:
-        print("Reset cancelled.")
+        print("Action cancelled.")
 
 def analyticsmenu():
     while True:
-        printheader("MODULE 6: SQL ANALYTICS, JOINS & ASCII CHARTS")
-        print("1. View SQL INNER JOIN Report (Champions + Ratings + MVPs)")
-        print("2. View Decade by Decade Efficiency Aggregation Report")
-        print("3. View Head Coach Finals Appearances Leaderboard")
-        print("4. View ASCII Bar Chart: Top 12 Teams by Net Rating")
-        print("5. View ASCII Bar Chart: Championships Won by Franchise")
-        print("6. View ASCII Bar Chart: Top 12 Finals MVP Scoring Averages")
-        print("7. View MySQL Database Table Row Count Summary")
-        print("8. Reset Database to Default Seed Records")
-        print("0. Return to Main Menu")
-        choice = readint("Enter your choice (0 to 8): ", 0, 8)
+        printheader("HOOPSDATA.COM / LEAGUE INSIGHTS AND LEADERBOARDS")
+        print("1. Championship Season Breakdown (Teams, Coaches and MVPs)")
+        print("2. Decade by Decade League Trends (1990s to 2020s)")
+        print("3. Most Successful Finals Head Coaches")
+        print("4. Visual Chart: Highest Rated Teams of All Time")
+        print("5. Visual Chart: Most Championships by Franchise")
+        print("6. Visual Chart: Highest Scoring Finals MVPs")
+        print("7. Portal Content Overview")
+        print("8. Restore Default Portal Data")
+        print("0. Back to Home Page")
+        choice = readint("Choose an option (0 to 8): ", 0, 8)
         if choice == 1:
-            joinedchampionreport()
+            championshipseasonbreakdown()
             pausescreen()
         elif choice == 2:
             decadesummaryreport()
@@ -1705,7 +1772,7 @@ def analyticsmenu():
             drawmvpscoringchart()
             pausescreen()
         elif choice == 7:
-            databasestatssummary()
+            portalcontentoverview()
             pausescreen()
         elif choice == 8:
             resetdefaultdata()
@@ -1716,16 +1783,16 @@ def analyticsmenu():
 def mainmenu():
     initdatabase()
     while True:
-        printheader("HOOPSDATA: NBA FINALS ARCHIVE & ANALYTICS SYSTEM (CBSE CLASS 12)")
-        print("1. Module 1: Team Efficiency Stats Management (CRUD & Filters)")
-        print("2. Module 2: Finals Series History Archive (CRUD & Leaderboards)")
-        print("3. Module 3: Finals MVP Statistical Database (CRUD & Comparisons)")
-        print("4. Module 4: NBA Arena & Stadium Directory (CRUD & Capacity)")
-        print("5. Module 5: Matchup Simulator & Play by Play Engine")
-        print("6. Module 6: SQL Analytics, Joins & Text Bar Charts")
-        print("0. Exit Application")
+        printheader("HOOPSDATA.COM | OFFICIAL NBA FINALS PORTAL")
+        print("1. Teams and Ratings")
+        print("2. Finals Series Archive")
+        print("3. Finals MVP Hub")
+        print("4. NBA Arenas and Venues")
+        print("5. Matchup Predictor and Simulator")
+        print("6. League Insights and Leaderboards")
+        print("0. Log Out and Exit")
         printline(78)
-        choice = readint("Select a module (0 to 6): ", 0, 6)
+        choice = readint("Where would you like to go? (0 to 6): ", 0, 6)
         if choice == 1:
             teammenu()
         elif choice == 2:
@@ -1740,7 +1807,7 @@ def mainmenu():
             analyticsmenu()
         elif choice == 0:
             print()
-            print("Thank you for using HoopsData NBA Finals Archive. Goodbye!")
+            print("Thank you for visiting HoopsData.com! Goodbye!")
             break
 
 mainmenu()
