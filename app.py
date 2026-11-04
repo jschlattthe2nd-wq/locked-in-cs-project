@@ -323,13 +323,13 @@ def initdatabase():
         print("Portal initialization error:", e)
 
 def printline(length):
-    print("=" * length)
+    print("+" + ("=" * (length - 2)) + "+")
 
 def printheader(title):
     print()
-    printline(78)
-    print(title.center(78))
-    printline(78)
+    printline(98)
+    print("|" + title.center(96) + "|")
+    printline(98)
 
 def pausescreen():
     print()
@@ -367,28 +367,37 @@ def readtext(prompt):
         print("This field cannot be empty. Please try again.")
 
 def formatcell(value, width):
-    text = str(value)
+    text = str(value).replace("\n", " ").strip()
     if len(text) > width:
         return text[:width]
     return text.ljust(width)
 
+def builddivider(widths):
+    parts = ["+"]
+    for w in widths:
+        parts.append("=" * (w + 2))
+        parts.append("+")
+    return "".join(parts)
+
 def printtable(headers, widths, rows):
-    totalwidth = sum(widths) + (len(widths) * 3) + 1
-    printline(totalwidth)
-    headerline = "| "
+    divider = builddivider(widths)
+    totalwidth = len(divider)
+    print(divider)
+    headerparts = ["|"]
     for i in range(len(headers)):
-        headerline = headerline + formatcell(headers[i], widths[i]) + " | "
-    print(headerline)
-    printline(totalwidth)
+        headerparts.append(" " + formatcell(headers[i], widths[i]) + " |")
+    print("".join(headerparts))
+    print(divider)
     if len(rows) == 0:
-        print("| " + "No matching results found.".ljust(totalwidth - 4) + " |")
+        emptytext = "No matching results found.".ljust(totalwidth - 4)
+        print("| " + emptytext + " |")
     else:
         for row in rows:
-            rowline = "| "
+            rowparts = ["|"]
             for i in range(len(widths)):
-                rowline = rowline + formatcell(row[i], widths[i]) + " | "
-            print(rowline)
-    printline(totalwidth)
+                rowparts.append(" " + formatcell(row[i], widths[i]) + " |")
+            print("".join(rowparts))
+    print(divider)
     print("Showing", len(rows), "results")
 
 def viewallteams():
@@ -403,8 +412,8 @@ def viewallteams():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Pace", "Head Coach"]
-    widths = [4, 28, 6, 6, 7, 7, 7, 6, 18]
+    headers = ["ID", "Team Name", "Year", "Conf", "Off", "Def", "Net", "Pace", "Head Coach"]
+    widths = [2, 27, 4, 4, 5, 5, 5, 5, 16]
     printtable(headers, widths, rows)
 
 def viewteamsbyyear():
@@ -423,7 +432,7 @@ def viewteamsbyyear():
     cursor.close()
     conn.close()
     headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Head Coach"]
-    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    widths = [2, 27, 4, 4, 7, 7, 7, 16]
     printtable(headers, widths, rows)
 
 def viewteamsbyconference():
@@ -444,7 +453,7 @@ def viewteamsbyconference():
     cursor.close()
     conn.close()
     headers = ["ID", "Team Name", "Year", "Offense", "Defense", "Overall", "Pace", "Head Coach"]
-    widths = [4, 28, 6, 7, 7, 7, 6, 18]
+    widths = [2, 27, 4, 7, 7, 7, 5, 16]
     printtable(headers, widths, rows)
 
 def searchteambyname():
@@ -463,7 +472,7 @@ def searchteambyname():
     cursor.close()
     conn.close()
     headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Head Coach"]
-    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    widths = [2, 27, 4, 4, 7, 7, 7, 16]
     printtable(headers, widths, rows)
 
 def topoffensiveteams():
@@ -479,7 +488,7 @@ def topoffensiveteams():
     cursor.close()
     conn.close()
     headers = ["ID", "Team Name", "Year", "Conf", "Offense", "Defense", "Overall", "Head Coach"]
-    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    widths = [2, 27, 4, 4, 7, 7, 7, 16]
     printtable(headers, widths, rows)
 
 def topdefensiveteams():
@@ -495,7 +504,7 @@ def topdefensiveteams():
     cursor.close()
     conn.close()
     headers = ["ID", "Team Name", "Year", "Conf", "Defense", "Offense", "Overall", "Head Coach"]
-    widths = [4, 28, 6, 6, 7, 7, 7, 18]
+    widths = [2, 27, 4, 4, 7, 7, 7, 16]
     printtable(headers, widths, rows)
 
 def comparetwoteams():
@@ -526,7 +535,7 @@ def comparetwoteams():
     net1 = round(float(t1[3]) - float(t1[4]), 2)
     net2 = round(float(t2[3]) - float(t2[4]), 2)
     headers = ["Team Attribute", t1[0], t2[0]]
-    widths = [22, 26, 26]
+    widths = [20, 27, 27]
     rows = [
         ("Season Year", t1[1], t2[1]),
         ("Conference", t1[2], t2[2]),
@@ -698,8 +707,8 @@ def viewallseries():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games", "Attendance"]
-    widths = [6, 22, 22, 8, 22, 5, 10]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games", "Crowd"]
+    widths = [4, 21, 22, 6, 23, 5, 6]
     printtable(headers, widths, rows)
 
 def viewseriesbyyearrange():
@@ -716,8 +725,8 @@ def viewseriesbyyearrange():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games", "Attendance"]
-    widths = [6, 22, 22, 8, 22, 5, 10]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games", "Crowd"]
+    widths = [4, 21, 22, 6, 23, 5, 6]
     printtable(headers, widths, rows)
 
 def searchseriesbyteam():
@@ -735,7 +744,7 @@ def searchseriesbyteam():
     cursor.close()
     conn.close()
     headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Games"]
-    widths = [6, 23, 23, 8, 22, 5]
+    widths = [4, 21, 22, 6, 23, 5]
     printtable(headers, widths, rows)
 
 def viewgame7series():
@@ -749,8 +758,8 @@ def viewgame7series():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Attendance"]
-    widths = [6, 23, 23, 8, 22, 10]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Crowd"]
+    widths = [4, 21, 22, 6, 23, 6]
     printtable(headers, widths, rows)
 
 def viewsweepseries():
@@ -764,8 +773,8 @@ def viewsweepseries():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Attendance"]
-    widths = [6, 23, 23, 8, 22, 10]
+    headers = ["Year", "Champion", "Runner Up", "Result", "Finals MVP", "Crowd"]
+    widths = [4, 21, 22, 6, 23, 6]
     printtable(headers, widths, rows)
 
 def championshipleaderboard():
@@ -780,7 +789,7 @@ def championshipleaderboard():
     cursor.close()
     conn.close()
     headers = ["Franchise Name", "Titles Won", "First Title", "Latest Title"]
-    widths = [28, 12, 14, 14]
+    widths = [24, 12, 12, 12]
     printtable(headers, widths, rows)
 
 def finalsappearancesleaderboard():
@@ -813,7 +822,7 @@ def finalsappearancesleaderboard():
 
     tabledata.sort(key=lambda item: (item[1], item[2]), reverse=True)
     headers = ["Franchise Name", "Appearances", "Finals Wins", "Finals Losses", "Win Rate"]
-    widths = [26, 13, 13, 14, 10]
+    widths = [24, 12, 12, 13, 9]
     printtable(headers, widths, tabledata)
 
 def addseriesrecord():
@@ -954,7 +963,7 @@ def viewallmvps():
     cursor.close()
     conn.close()
     headers = ["Year", "Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
-    widths = [6, 24, 24, 6, 6, 6, 7]
+    widths = [4, 23, 21, 5, 5, 5, 6]
     printtable(headers, widths, rows)
 
 def searchmvpbyplayer():
@@ -972,7 +981,7 @@ def searchmvpbyplayer():
     cursor.close()
     conn.close()
     headers = ["Year", "Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
-    widths = [6, 24, 24, 6, 6, 6, 7]
+    widths = [4, 23, 21, 5, 5, 5, 6]
     printtable(headers, widths, rows)
 
 def filtermvpsbyppg():
@@ -989,7 +998,7 @@ def filtermvpsbyppg():
     cursor.close()
     conn.close()
     headers = ["Year", "Player Name", "Team", "PPG", "RPG", "APG", "FG Pct"]
-    widths = [6, 24, 24, 6, 6, 6, 7]
+    widths = [4, 23, 21, 5, 5, 5, 6]
     printtable(headers, widths, rows)
 
 def multiplemvpwinners():
@@ -1005,7 +1014,7 @@ def multiplemvpwinners():
     cursor.close()
     conn.close()
     headers = ["Player Name", "MVP Awards", "Avg PPG", "Avg RPG", "Avg APG"]
-    widths = [26, 12, 10, 10, 10]
+    widths = [24, 12, 9, 9, 9]
     printtable(headers, widths, rows)
 
 def comparetwomvps():
@@ -1170,7 +1179,7 @@ def viewallarenas():
     cursor.close()
     conn.close()
     headers = ["ID", "Arena Name", "City", "Home Team", "Capacity", "Opened"]
-    widths = [4, 26, 15, 22, 9, 6]
+    widths = [2, 24, 14, 22, 8, 6]
     printtable(headers, widths, rows)
 
 def searcharenabycity():
@@ -1188,7 +1197,7 @@ def searcharenabycity():
     cursor.close()
     conn.close()
     headers = ["ID", "Arena Name", "City", "Home Team", "Capacity", "Opened"]
-    widths = [4, 26, 15, 22, 9, 6]
+    widths = [2, 24, 14, 22, 8, 6]
     printtable(headers, widths, rows)
 
 def filterarenasbycapacity():
@@ -1205,7 +1214,7 @@ def filterarenasbycapacity():
     cursor.close()
     conn.close()
     headers = ["ID", "Arena Name", "City", "Home Team", "Capacity", "Opened"]
-    widths = [4, 26, 15, 22, 9, 6]
+    widths = [2, 24, 14, 22, 8, 6]
     printtable(headers, widths, rows)
 
 def oldestarenasreport():
@@ -1219,8 +1228,8 @@ def oldestarenasreport():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Arena Name", "City", "Home Team", "Opened", "Years Active", "Capacity"]
-    widths = [4, 25, 14, 22, 6, 12, 8]
+    headers = ["ID", "Arena Name", "City", "Home Team", "Opened", "Years", "Capacity"]
+    widths = [2, 24, 14, 22, 6, 6, 8]
     printtable(headers, widths, rows)
 
 def addarenarecord():
@@ -1347,7 +1356,7 @@ def savetosimlogs(teama, teamb, winner, games, margin):
     cursor = conn.cursor()
     cursor.execute("SELECT COALESCE(MAX(simid), 0) + 1 FROM simlogs")
     newid = cursor.fetchone()[0]
-    now = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    now = datetime.now().strftime("%Y/%m/%d %H:%M")
     cursor.execute(
         "INSERT INTO simlogs VALUES (%s, %s, %s, %s, %s, %s, %s)",
         (newid, now, teama, teamb, winner, int(games), float(margin))
@@ -1405,7 +1414,7 @@ def runratingsimulation():
         predictedgames = 7
 
     headers = ["Comparison Metric", namea, nameb]
-    widths = [24, 26, 26]
+    widths = [24, 27, 27]
     rows = [
         ("Head Coach", coacha, coachb),
         ("Offensive Rating", offa, offb),
@@ -1470,8 +1479,9 @@ def runbestof7playbyplay():
         gamerows.append(("Game " + str(gamenum), pts1, pts2, gamewinner, standing))
         gamenum = gamenum + 1
 
-    headers = ["Game", namea + " Pts", nameb + " Pts", "Game Winner", "Series Lead"]
-    widths = [8, 22, 22, 26, 15]
+    headers = ["Game", "Team A Pts", "Team B Pts", "Game Winner", "Series Lead"]
+    widths = [6, 12, 12, 27, 11]
+    print("Team A:", namea, "| Team B:", nameb)
     printtable(headers, widths, gamerows)
 
     totalgames = winsa + winsb
@@ -1486,14 +1496,14 @@ def viewsimlogs():
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT simid, simdate, teama, teamb, winner, predictedgames, margin "
+        "SELECT simid, LEFT(simdate, 16), teama, teamb, winner, predictedgames, margin "
         "FROM simlogs ORDER BY simid DESC LIMIT 50"
     )
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Date and Time", "Team A", "Team B", "Winner", "Games", "Margin"]
-    widths = [4, 19, 23, 23, 23, 5, 6]
+    headers = ["ID", "Date", "Team A", "Team B", "Winner", "Games", "Margin"]
+    widths = [2, 10, 20, 20, 20, 5, 6]
     printtable(headers, widths, rows)
 
 def searchsimlogsbyteam():
@@ -1503,15 +1513,15 @@ def searchsimlogsbyteam():
     conn = getdbconnection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT simid, simdate, teama, teamb, winner, predictedgames, margin "
+        "SELECT simid, LEFT(simdate, 16), teama, teamb, winner, predictedgames, margin "
         "FROM simlogs WHERE teama LIKE %s OR teamb LIKE %s ORDER BY simid DESC",
         (pattern, pattern)
     )
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["ID", "Date and Time", "Team A", "Team B", "Winner", "Games", "Margin"]
-    widths = [4, 19, 23, 23, 23, 5, 6]
+    headers = ["ID", "Date", "Team A", "Team B", "Winner", "Games", "Margin"]
+    widths = [2, 10, 20, 20, 20, 5, 6]
     printtable(headers, widths, rows)
 
 def deletesimlogbyid():
@@ -1593,8 +1603,8 @@ def championshipseasonbreakdown():
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    headers = ["Year", "Champion", "Offense", "Defense", "Overall", "Finals MVP", "MVP PPG", "Head Coach"]
-    widths = [5, 22, 7, 7, 7, 20, 7, 16]
+    headers = ["Year", "Champion", "Off", "Def", "Net", "Finals MVP", "PPG", "Head Coach"]
+    widths = [4, 20, 5, 5, 5, 22, 5, 15]
     printtable(headers, widths, rows)
 
 def decadesummaryreport():
@@ -1632,8 +1642,8 @@ def decadesummaryreport():
         ))
     cursor.close()
     conn.close()
-    headers = ["Decade Era", "Teams", "Avg Offense", "Avg Defense", "Avg Pace", "Avg Games", "Avg Crowd"]
-    widths = [21, 6, 11, 11, 9, 9, 10]
+    headers = ["Decade Era", "Teams", "Avg Off", "Avg Def", "Avg Pace", "Avg Games", "Avg Crowd"]
+    widths = [21, 5, 8, 8, 8, 9, 9]
     printtable(headers, widths, reportrows)
 
 def drawratingchart():
@@ -1791,7 +1801,7 @@ def mainmenu():
         print("5. Matchup Predictor and Simulator")
         print("6. League Insights and Leaderboards")
         print("0. Log Out and Exit")
-        printline(78)
+        printline(98)
         choice = readint("Where would you like to go? (0 to 6): ", 0, 6)
         if choice == 1:
             teammenu()
