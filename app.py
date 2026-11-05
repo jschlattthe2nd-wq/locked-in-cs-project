@@ -646,7 +646,7 @@ def deleteteamrecord():
 
 def teammenu():
     while True:
-        printheader("HOOPSDATA.COM / TEAMS AND RATINGS")
+        printheader("HOOPSDATA / TEAMS AND RATINGS")
         print("1. Browse All Finals Teams")
         print("2. Browse Teams by Season Years")
         print("3. Browse Teams by Conference")
@@ -905,7 +905,7 @@ def deleteseriesrecord():
 
 def seriesmenu():
     while True:
-        printheader("HOOPSDATA.COM / FINALS SERIES ARCHIVE")
+        printheader("HOOPSDATA / FINALS SERIES ARCHIVE")
         print("1. Browse All Finals Series")
         print("2. Browse Series by Year Range")
         print("3. Search Series by Franchise")
@@ -1129,7 +1129,7 @@ def deletemvprecord():
 
 def mvpmenu():
     while True:
-        printheader("HOOPSDATA.COM / FINALS MVP HUB")
+        printheader("HOOPSDATA / FINALS MVP HUB")
         print("1. Browse All Finals MVPs")
         print("2. Search MVPs by Player Name")
         print("3. Browse MVPs by Scoring Average")
@@ -1304,7 +1304,7 @@ def deletearenarecord():
 
 def arenamenu():
     while True:
-        printheader("HOOPSDATA.COM / NBA ARENAS AND VENUES")
+        printheader("HOOPSDATA / NBA ARENAS AND VENUES")
         print("1. Browse All Arenas by Capacity")
         print("2. Search Arenas by City or Team")
         print("3. Browse Arenas by Minimum Capacity")
@@ -1558,7 +1558,7 @@ def clearallsimlogs():
 
 def simulatormenu():
     while True:
-        printheader("HOOPSDATA.COM / MATCHUP PREDICTOR AND SIMULATOR")
+        printheader("HOOPSDATA / MATCHUP PREDICTOR AND SIMULATOR")
         print("1. Instant Matchup Predictor")
         print("2. 7 Game Series Play by Play Simulator")
         print("3. View Matchup History")
@@ -1752,7 +1752,7 @@ def resetdefaultdata():
 
 def analyticsmenu():
     while True:
-        printheader("HOOPSDATA.COM / LEAGUE INSIGHTS AND LEADERBOARDS")
+        printheader("HOOPSDATA / LEAGUE INSIGHTS AND LEADERBOARDS")
         print("1. Championship Season Breakdown (Teams, Coaches and MVPs)")
         print("2. Decade by Decade League Trends (1990s to 2020s)")
         print("3. Most Successful Finals Head Coaches")
@@ -1793,7 +1793,7 @@ def analyticsmenu():
 def mainmenu():
     initdatabase()
     while True:
-        printheader("HOOPSDATA.COM | OFFICIAL NBA FINALS PORTAL")
+        printheader("HOOPSDATA | OFFICIAL NBA FINALS PORTAL")
         print("1. Teams and Ratings")
         print("2. Finals Series Archive")
         print("3. Finals MVP Hub")
@@ -1817,7 +1817,7 @@ def mainmenu():
             analyticsmenu()
         elif choice == 0:
             print()
-            print("Thank you for visiting HoopsData.com! Goodbye!")
+            print("Thank you for visiting HoopsData! Goodbye!")
             break
 
 mainmenu()
