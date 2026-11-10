@@ -646,7 +646,7 @@ def deleteteamrecord():
 
 def teammenu():
     while True:
-        printheader("HOOPSDATA / TEAMS AND RATINGS")
+        printheader("HOOPSDATA.COM / TEAMS AND RATINGS")
         print("1. Browse All Finals Teams")
         print("2. Browse Teams by Season Years")
         print("3. Browse Teams by Conference")
@@ -905,7 +905,7 @@ def deleteseriesrecord():
 
 def seriesmenu():
     while True:
-        printheader("HOOPSDATA / FINALS SERIES ARCHIVE")
+        printheader("HOOPSDATA.COM / FINALS SERIES ARCHIVE")
         print("1. Browse All Finals Series")
         print("2. Browse Series by Year Range")
         print("3. Search Series by Franchise")
@@ -1129,7 +1129,7 @@ def deletemvprecord():
 
 def mvpmenu():
     while True:
-        printheader("HOOPSDATA / FINALS MVP HUB")
+        printheader("HOOPSDATA.COM / FINALS MVP HUB")
         print("1. Browse All Finals MVPs")
         print("2. Search MVPs by Player Name")
         print("3. Browse MVPs by Scoring Average")
@@ -1304,7 +1304,7 @@ def deletearenarecord():
 
 def arenamenu():
     while True:
-        printheader("HOOPSDATA / NBA ARENAS AND VENUES")
+        printheader("HOOPSDATA.COM / NBA ARENAS AND VENUES")
         print("1. Browse All Arenas by Capacity")
         print("2. Search Arenas by City or Team")
         print("3. Browse Arenas by Minimum Capacity")
@@ -1558,7 +1558,7 @@ def clearallsimlogs():
 
 def simulatormenu():
     while True:
-        printheader("HOOPSDATA / MATCHUP PREDICTOR AND SIMULATOR")
+        printheader("HOOPSDATA.COM / MATCHUP PREDICTOR AND SIMULATOR")
         print("1. Instant Matchup Predictor")
         print("2. 7 Game Series Play by Play Simulator")
         print("3. View Matchup History")
@@ -1646,53 +1646,6 @@ def decadesummaryreport():
     widths = [21, 5, 8, 8, 8, 9, 9]
     printtable(headers, widths, reportrows)
 
-def drawratingchart():
-    printheader("VISUAL CHART: HIGHEST RATED FINALS TEAMS OF ALL TIME")
-    conn = getdbconnection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT teamname, ROUND(offrating - defrating, 2) AS netrtg "
-        "FROM teamstats ORDER BY netrtg DESC LIMIT 12"
-    )
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    for teamname, netrtg in rows:
-        barsize = int(float(netrtg) * 3)
-        bar = "#" * max(1, barsize)
-        print(formatcell(teamname, 28) + " | " + bar + " (" + str(netrtg) + ")")
-
-def drawtitlechart():
-    printheader("VISUAL CHART: MOST CHAMPIONSHIPS BY FRANCHISE")
-    conn = getdbconnection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT champion, COUNT(*) AS titles "
-        "FROM serieshistory GROUP BY champion ORDER BY titles DESC"
-    )
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    for team, titles in rows:
-        bar = "#" * (int(titles) * 5)
-        print(formatcell(team, 25) + " | " + bar + " (" + str(titles) + ")")
-
-def drawmvpscoringchart():
-    printheader("VISUAL CHART: HIGHEST SCORING FINALS MVPS")
-    conn = getdbconnection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT year, playername, ppg FROM mvpstats ORDER BY ppg DESC LIMIT 12"
-    )
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    for year, player, ppg in rows:
-        label = str(year) + " " + player
-        barsize = int(float(ppg))
-        bar = "#" * barsize
-        print(formatcell(label, 28) + " | " + bar + " (" + str(ppg) + " PPG)")
-
 def coachleaderboard():
     printheader("MOST SUCCESSFUL FINALS HEAD COACHES")
     conn = getdbconnection()
@@ -1752,17 +1705,14 @@ def resetdefaultdata():
 
 def analyticsmenu():
     while True:
-        printheader("HOOPSDATA / LEAGUE INSIGHTS AND LEADERBOARDS")
+        printheader("HOOPSDATA.COM / LEAGUE INSIGHTS AND LEADERBOARDS")
         print("1. Championship Season Breakdown (Teams, Coaches and MVPs)")
         print("2. Decade by Decade League Trends (1990s to 2020s)")
         print("3. Most Successful Finals Head Coaches")
-        print("4. Visual Chart: Highest Rated Teams of All Time")
-        print("5. Visual Chart: Most Championships by Franchise")
-        print("6. Visual Chart: Highest Scoring Finals MVPs")
-        print("7. Portal Content Overview")
-        print("8. Restore Default Portal Data")
+        print("4. Portal Content Overview")
+        print("5. Restore Default Portal Data")
         print("0. Back to Home Page")
-        choice = readint("Choose an option (0 to 8): ", 0, 8)
+        choice = readint("Choose an option (0 to 5): ", 0, 5)
         if choice == 1:
             championshipseasonbreakdown()
             pausescreen()
@@ -1773,18 +1723,9 @@ def analyticsmenu():
             coachleaderboard()
             pausescreen()
         elif choice == 4:
-            drawratingchart()
-            pausescreen()
-        elif choice == 5:
-            drawtitlechart()
-            pausescreen()
-        elif choice == 6:
-            drawmvpscoringchart()
-            pausescreen()
-        elif choice == 7:
             portalcontentoverview()
             pausescreen()
-        elif choice == 8:
+        elif choice == 5:
             resetdefaultdata()
             pausescreen()
         elif choice == 0:
@@ -1793,7 +1734,7 @@ def analyticsmenu():
 def mainmenu():
     initdatabase()
     while True:
-        printheader("HOOPSDATA | OFFICIAL NBA FINALS PORTAL")
+        printheader("HOOPSDATA.COM | OFFICIAL NBA FINALS PORTAL")
         print("1. Teams and Ratings")
         print("2. Finals Series Archive")
         print("3. Finals MVP Hub")
@@ -1817,7 +1758,7 @@ def mainmenu():
             analyticsmenu()
         elif choice == 0:
             print()
-            print("Thank you for visiting HoopsData! Goodbye!")
+            print("Thank you for visiting HoopsData.com! Goodbye!")
             break
 
 mainmenu()
